@@ -1,0 +1,443 @@
+        .home-container {
+            align-items: center;
+            margin: 2rem auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease-out;
+            margin-left: 15rem;
+            max-width: calc(100% - 20rem);
+            padding: 2rem;
+        }
+
+        .collection-header {
+            margin-bottom: 2rem;
+        }
+
+        .collection-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 0.5rem;
+        }
+
+        .collection-status {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 0.5rem;
+            text-align: left;
+        }
+
+        .collection-description {
+            font-size: 1rem;
+            color: #4a5568;
+            margin: 0;
+        }
+
+        .sort-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sort-container label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .sort-container select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .sort-container select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .pins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .pin-item {
+            position: relative;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            pointer-events: none;
+        }
+
+        .pin-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .pin-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .pin-info {
+            padding: 1rem;
+            pointer-events: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pin-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pin-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .pin-stats svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 0.25rem;
+        }
+
+        .like-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .like-button.liked i {
+            color: #e0245e;
+        }
+
+        .like-count {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .delete-cross {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            font-size: 1.2rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            z-index: 9999;
+            pointer-events: auto;
+        }
+
+        .delete-cross:hover {
+            background: rgba(200, 0, 0, 0.8);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-modal-content {
+            background-color: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: fadeInUp 0.3s ease-out;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            background: none;
+            border: none;
+        }
+
+        .modal-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .modal-image {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .modal-pin-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-details {
+            flex: 1;
+            background-color: #000;
+            color: #fff;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .modal-pin-stats {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #4299e1;
+            color: #ffffff;
+            border: none;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-option.liked svg {
+            fill: #e0245e;
+            stroke: #e0245e;
+        }
+
+        .modal-comment-section {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .comment-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem 0;
+        }
+
+        .comment-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #333;
+            font-size: 0.9rem;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .comment-list li img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .comment-list li span {
+            margin-left: auto;
+            color: #666;
+        }
+
+    .comment-delete {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 0, 0, 0.8);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: background 0.2s ease;
+        z-index: 1;
+    }
+
+    .comment-delete:hover {
+        background: rgba(200, 0, 0, 0.8);
+    }
+
+    .comment-list li .comment-delete {
+        color: white;
+    }
+
+        .comment-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .comment-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #222;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .comment-input button {
+            padding: 0.75rem 1.5rem;
+            background-color: #4299e1;
+            color: #ffffff;
+            border: none;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .comment-input button:hover {
+            background-color: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .comment-input button:active {
+            transform: translateY(0);
+        }
+
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .delete-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .delete-modal-close:hover {
+            color: #333;
+        }
+
+        .delete-modal h2 {
+            margin: 0 0 10px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .delete-modal p {
+            margin: 0 0 20px;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .delete-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .delete-modal-cancel, .delete-modal-confirm {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .delete-modal-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .delete-modal-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .delete-modal-confirm {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .delete-modal-confirm:hover {
+            background: #e63939;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }

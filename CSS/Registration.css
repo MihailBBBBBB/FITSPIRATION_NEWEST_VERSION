@@ -1,0 +1,145 @@
+body {
+    font-family: 'Inter', Arial, sans-serif; /* Modern font */
+    background-color: #f0f4f8; /* Softer background color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* Deeper shadow for depth */
+    width: 100%;
+    max-width: 400px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+}
+
+.container:hover {
+    transform: translateY(-5px); /* Slight lift on hover */
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+h1 {
+    color: #2c3e50; /* Darker, more modern color */
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.75rem; /* Larger font size */
+    font-weight: 600; /* Bold heading */
+}
+
+.form-group {
+    margin-bottom: 1.5rem; /* Increased spacing */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: #4a5568; /* Subtle label color */
+    font-size: 0.9rem;
+    font-weight: 500; /* Medium weight for labels */
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.875rem;
+    border: 1px solid #e2e8f0; /* Lighter border color */
+    border-radius: 6px; /* Slightly rounded corners */
+    font-size: 1rem;
+    color: #2d3748; /* Darker text color */
+    background-color: #f8fafc; /* Light background for inputs */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+}
+
+.form-group input:focus {
+    border-color: #4299e1; /* Brighter focus color */
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); /* Subtle focus ring */
+}
+
+.continue-button {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: #4299e1; /* Modern blue color */
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600; /* Bold button text */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover and click effects */
+}
+
+.continue-button:hover {
+    background-color: #3182ce; /* Darker hover color */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.continue-button:active {
+    transform: translateY(0); /* Reset on click */
+}
+
+/* Optional: Add a subtle gradient to the button */
+.continue-button {
+    background-image: linear-gradient(135deg, #4299e1, #3182ce);
+}
+
+/* Optional: Add a small animation to the container on load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.login-button {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: transparent; /* Transparent background */
+    color: #4299e1; /* Same blue as the continue button */
+    border: 2px solid #4299e1; /* Border to make it stand out */
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem; /* Add some space above the button */
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.login-button:hover {
+    background-color: #4299e1; /* Blue background on hover */
+    color: #ffffff; /* White text on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.login-button:active {
+    transform: translateY(0); /* Reset on click */
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    display: block;
+    margin-top: 5px;
+}
+
+.server-error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
