@@ -104,8 +104,32 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }
-    
-h2 {
+
+.translate-btn {
+    background: #ffffff;
+    color: #1f6f54;
+    border: 1px solid #bfe3d2;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    min-width: 56px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.translate-btn:hover {
+    background: #ecfaf3;
+    border-color: #89cfb0;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(31, 111, 84, 0.14);
+}
+
+.translate-btn:active {
+    transform: translateY(0);
+}
     text-align: center;
     font-size: 2.5rem;
     margin-top: 50px;
@@ -274,6 +298,25 @@ h3 {
 
 .sidebar i {
     font-size: 18px;
+}
+
+.notifications-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notification-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #e63946;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
 }
 
 

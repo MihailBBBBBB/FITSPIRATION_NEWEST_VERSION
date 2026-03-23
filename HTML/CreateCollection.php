@@ -16,8 +16,8 @@ include_once '../includes/CreateCollection.inc.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="../CSS/CreateCollection.css"/>
     <link rel="stylesheet" href="../CSS/Main.css"/>
+    <script src="../JS/translator.js"></script>
 </head>
-<body>
 <body>
     <special-header></special-header>
 
@@ -35,8 +35,8 @@ include_once '../includes/CreateCollection.inc.php';
                             <div style="font-size: 2rem;">⬆️</div>
                             <p>Choose a cover image</p>
                         </label>
-                        <input type="file" id="file-upload" name="cover_image" accept="image/jpeg, image/png" />
-                        <p style="font-size: 0.85rem; margin-top: 20px;">Optional: Add a high-quality .jpg or .png image (less than 20 MB) as your collection cover.</p>
+                        <input type="file" id="file-upload" class="preview-input" name="cover_image" accept="image/jpeg, image/png" />
+                        <p class="upload-hint" style="font-size: 0.85rem; margin-top: 20px;">Optional: Add a high-quality .jpg or .png image (less than 20 MB) as your collection cover.</p>
                     </div>
                     
                     <div class="form-section">
@@ -55,6 +55,7 @@ include_once '../includes/CreateCollection.inc.php';
     </div>
 
     <special-footer></special-footer>
+    <script src="../JS/CreateMediaPreview.js"></script>
 
 </body>
 </html>

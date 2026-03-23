@@ -22,6 +22,7 @@ if (!isset($_SESSION['user_id'])) {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
         <link rel="stylesheet" href="../CSS/Main.css"/>
         <link rel="stylesheet" href="../CSS/Home.css"/>
+        <script src="../JS/translator.js"></script>
     </head>
     <body>
         <special-header></special-header>
@@ -49,11 +50,19 @@ if (!isset($_SESSION['user_id'])) {
                                     <img 
                                     src="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>" 
                                     alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>" 
-                                    class="pin-image" 
-                                    onclick="openPinModal('<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>', '<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>', '<?php echo htmlspecialchars($pin['id'] ?? ''); ?>', <?php echo $pin['like_count']; ?>, <?php echo $pin['user_liked'] ? 'true' : 'false'; ?>)"
+                                    class="pin-image pin-open-modal" 
+                                    data-image="<?php echo htmlspecialchars($pin['img'] ? '../images/' . $pin['img'] : '../images/no_image.jpg'); ?>"
+                                    data-title="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
+                                    data-pin-id="<?php echo htmlspecialchars($pin['id'] ?? ''); ?>"
+                                    data-like-count="<?php echo htmlspecialchars($pin['like_count']); ?>"
+                                    data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
+                                    data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
+                                    data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
+                                    data-creator-img="<?php echo $pin['creator_img'] ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
                                     >
                                     <div class="pin-info">
                                         <h3 class="pin-title"><?php echo htmlspecialchars($pin['title'] ?? 'Untitled'); ?></h3>
+                                        <p class="pin-creator">By <a href="Profile.php?user_id=<?php echo htmlspecialchars($pin['creator_id']); ?>"><?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?></a></p>
                                         <div class="pin-stats">
                                             <form method="POST" action="" style="margin: 0;">
                                                 <input type="hidden" name="pin_id" value="<?php echo htmlspecialchars($pin['id']); ?>">
@@ -83,6 +92,20 @@ if (!isset($_SESSION['user_id'])) {
                                             <img id="modalPinImage" src="<?php echo $modal_pin_data['image']; ?>" alt="Pin Image" class="modal-pin-image">
                                         </div>
                                         <div class="modal-details">
+                                            <div class="modal-creator-row">
+                                                <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars($modal_pin_data['creator_img'] ?? '../images/no_image.jpg'); ?>" alt="Creator">
+                                                <div>
+                                                    <?php
+                                                    $modal_creator_href = '#';
+                                                    if (!empty($modal_pin_data['creator_id'])) {
+                                                        $modal_creator_href = 'Profile.php?user_id=' . urlencode($modal_pin_data['creator_id']);
+                                                    }
+                                                    $modal_creator_name = htmlspecialchars($modal_pin_data['creator_name'] ?? 'Unknown');
+                                                    ?>
+                                                            <a id="modalCreatorLink" class="creator-link" href="<?php echo !empty($modal_pin_data['creator_id']) ? 'Profile.php?user_id=' . urlencode($modal_pin_data['creator_id']) : '#'; ?>" style="<?php echo !empty($modal_pin_data['creator_id']) ? '' : 'pointer-events:none; color:#6b7280;'; ?>"><?php echo $modal_creator_name; ?></a>
+                                                    <p class="creator-subtitle">Created this pin</p>
+                                                </div>
+                                            </div>
                                             <h3 id="modalPinTitle" class="pin-title"><?php echo $modal_pin_data['title']; ?></h3>
                                             <div class="modal-pin-stats">
                                                 <form method="POST" action="" style="margin: 0;">
@@ -108,10 +131,12 @@ if (!isset($_SESSION['user_id'])) {
                                         $user_can_delete = true;
                                     }
                                     if ($user_can_delete): ?>
-                                        <span class="comment-delete" 
-                                        data-comment-id="<?php echo isset($comment['id']) ? htmlspecialchars($comment['id']) : ''; ?>" 
-                                        data-pin-id="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>"
-                                        onclick="deleteComment(<?php echo isset($comment['id']) ? htmlspecialchars($comment['id']) : ''; ?>, '<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>')">×</span>
+                                        <form method="POST" action="" class="comment-delete-form" style="display:inline;">
+                                            <input type="hidden" name="delete_comment" value="1">
+                                            <input type="hidden" name="comment_id" value="<?php echo htmlspecialchars($comment['id']); ?>">
+                                            <input type="hidden" name="pin_id" value="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>">
+                                            <button type="submit" class="comment-delete">×</button>
+                                        </form>
                                         <?php endif; ?>
                                     </li>
                                     <?php endforeach; ?>

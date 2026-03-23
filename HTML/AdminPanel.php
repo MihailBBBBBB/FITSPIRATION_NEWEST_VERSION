@@ -13,7 +13,7 @@ include_once "../includes/AdminPanel.inc.php";
     <title>Admin Panel - Fitspiration</title>
     <link rel="stylesheet" href="../CSS/Main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <script src="../JS/translator.js"></script>
 </head>
 <body>
     <special-header></special-header>

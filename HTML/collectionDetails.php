@@ -16,6 +16,7 @@ include_once "../includes/collectionDetails.inc.php";
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
         <link rel="stylesheet" href="../CSS/Main.css"/>
         <link rel="stylesheet" href="../CSS/collectionDetails.css"/>
+        <script src="../JS/translator.js"></script>
     </head>
     <body>
         <script src="../JS/collectionDetails.js"></script>
@@ -58,8 +59,15 @@ include_once "../includes/collectionDetails.inc.php";
                             <img 
                             src="<?php echo $image_path; ?>" 
                             alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>" 
-                            class="pin-image" 
-                            onclick="openPinModal('<?php echo $image_path; ?>', '<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>', '<?php echo htmlspecialchars($pin['id'] ?? ''); ?>', <?php echo $pin['like_count']; ?>, <?php echo $pin['user_liked'] ? 'true' : 'false'; ?>)"
+                            class="pin-image"
+                            data-image="<?php echo $image_path; ?>"
+                            data-title="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
+                            data-pin-id="<?php echo htmlspecialchars($pin['id'] ?? ''); ?>"
+                            data-like-count="<?php echo htmlspecialchars($pin['like_count']); ?>"
+                            data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
+                            data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
+                            data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
+                            data-creator-img="<?php echo !empty($pin['creator_img']) ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
                             >
                             <?php if (!empty($pin['id']) && $_SESSION['user_id'] == $user_id): ?>
                                 <span class="delete-cross" 
@@ -97,6 +105,13 @@ include_once "../includes/collectionDetails.inc.php";
                                         <img id="modalPinImage" src="<?php echo $modal_pin_data['image']; ?>" alt="Pin Image" class="modal-pin-image">
                                     </div>
                                     <div class="modal-details">
+                                        <div class="modal-creator-row">
+                                            <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars($modal_pin_data['creator_img'] ?? '../images/no_image.jpg'); ?>" alt="Creator">
+                                            <div>
+                                                <a id="modalCreatorLink" class="creator-link" href="<?php echo !empty($modal_pin_data['creator_id']) ? 'Profile.php?user_id=' . urlencode($modal_pin_data['creator_id']) : '#'; ?>" style="<?php echo !empty($modal_pin_data['creator_id']) ? '' : 'pointer-events:none; color:#6b7280;'; ?>"><?php echo htmlspecialchars($modal_pin_data['creator_name'] ?? 'Unknown'); ?></a>
+                                                <p class="creator-subtitle">Created this pin</p>
+                                            </div>
+                                        </div>
                                         <h3 id="modalPinTitle" class="pin-title"><?php echo $modal_pin_data['title']; ?></h3>
                                         <div class="modal-pin-stats">
                                             <form method="POST" action="" style="margin: 0;">

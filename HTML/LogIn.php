@@ -6,6 +6,7 @@
     <title>Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../CSS/Login.css"/>
+    <script src="../JS/translator.js"></script>
 </head>
 <body>
     <div class="container"> 

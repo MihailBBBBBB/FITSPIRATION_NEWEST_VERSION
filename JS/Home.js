@@ -1,36 +1,59 @@
+function populatePinModal(pinElement) {
+    if (!pinElement) return;
 
-function openPinModal(imageSrc, title, pinId, likeCount, userLiked) {
+    const imageSrc = pinElement.querySelector('.pin-image')?.dataset.image || pinElement.dataset.image || '../images/no_image.jpg';
+    const title = pinElement.querySelector('.pin-title')?.textContent || pinElement.dataset.title || 'Pin';
+    const pinId = pinElement.dataset.pinId || '';
+    const imageElement = pinElement.querySelector('.pin-image');
+    const likeCount = Number(imageElement?.dataset.likeCount || pinElement.dataset.likeCount || 0);
+    const userLiked = (imageElement?.dataset.userLiked === '1') || (pinElement.dataset.userLiked === '1');
+    const creatorId = imageElement?.dataset.creatorId || pinElement.dataset.creatorId || '';
+    const creatorName = imageElement?.dataset.creatorName || pinElement.dataset.creatorName || 'Unknown';
+    const creatorImg = imageElement?.dataset.creatorImg || pinElement.dataset.creatorImg || '../images/no_image.jpg';
+
     const modalPinImage = document.getElementById('modalPinImage');
     const modalPinTitle = document.getElementById('modalPinTitle');
     const modalLikeButton = document.getElementById('modalLikeButton');
     const modalLikeCount = document.getElementById('modalLikeCount');
-    
-    if (!modalPinImage || !modalPinTitle || !modalLikeButton || !modalLikeCount) {
-        console.error('One or more modal elements are missing:', {
-            modalPinImage: !!modalPinImage,
-            modalPinTitle: !!modalPinTitle,
-            modalLikeButton: !!modalLikeButton,
-            modalLikeCount: !!modalLikeCount
-        });
-        return;
+    const modalCreatorLink = document.getElementById('modalCreatorLink');
+    const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
+
+    if (modalPinImage) modalPinImage.src = imageSrc;
+    if (modalPinTitle) modalPinTitle.textContent = title;
+    if (modalLikeButton) {
+        modalLikeButton.dataset.pinId = pinId;
+        modalLikeButton.classList.toggle('liked', userLiked);
     }
-    
-    modalPinImage.src = imageSrc;
-    modalPinTitle.textContent = title;
-    modalLikeButton.setAttribute('data-pin-id', pinId);
-    modalLikeCount.textContent = likeCount;
-    modalLikeButton.classList.toggle('liked', userLiked);
-    
-    const forms = document.querySelectorAll('#pinModal form input[name="pin_id"]');
-    forms.forEach(formInput => {
-        formInput.value = pinId;
-    });
-    
-    const currentSearch = window.location.search || '';
-    const newSearch = currentSearch.includes('pin_id=') 
-    ? currentSearch.replace(/pin_id=\d+/, `pin_id=${pinId}`)
-    : `${currentSearch}${currentSearch ? '&' : '?'}pin_id=${pinId}`;
-    window.location.href = `Home.php${newSearch}#pinModal`;
+    if (modalLikeCount) modalLikeCount.textContent = likeCount;
+    if (modalCreatorAvatar) modalCreatorAvatar.src = creatorImg;
+
+    if (modalCreatorLink) {
+        if (creatorId) {
+            modalCreatorLink.href = 'Profile.php?user_id=' + encodeURIComponent(creatorId);
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'auto';
+            modalCreatorLink.style.color = '#1d4ed8';
+        } else {
+            modalCreatorLink.href = '#';
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'none';
+            modalCreatorLink.style.color = '#6b7280';
+        }
+    }
+
+    const pinIdInputs = document.querySelectorAll('#pinModal input[name="pin_id"]');
+    pinIdInputs.forEach(input => input.value = pinId);
+
+    const modal = document.getElementById('pinModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function openPinModal(pinId) {
+    if (!pinId) return;
+    const url = new URL(window.location);
+    url.searchParams.set('pin_id', pinId);
+    url.hash = 'pinModal';
+    window.location.href = url.toString();
 }
 
 function closePinModal() {
@@ -44,26 +67,25 @@ function closePinModal() {
     }
 }
 
-function deleteComment(commentId, pinId) {
-    if (!confirm('Are you sure you want to delete this comment?')) return;
-    
-    const formData = new FormData();
-    formData.append('delete_comment', true);
-    formData.append('comment_id', commentId);
-    formData.append('pin_id', pinId);
-    
-    fetch(`Home.php?sort=<?php echo urlencode($sort); ?><?php echo $searchTerm ? '&search=' . urlencode($searchTerm) : ''; ?>&pin_id=${pinId}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(() => {
-        window.location.href = `Home.php?pin_id=${pinId}&sort=<?php echo urlencode($sort); ?><?php echo $searchTerm ? '&search=' . urlencode($searchTerm) : ''; ?>#pinModal`;
-    })
-    .catch(error => console.error('Error deleting comment:', error));
-}
-
 window.addEventListener('load', function() {
+    const pinItems = document.querySelectorAll('.pin-item[data-pin-id]');
+    pinItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Prevent modal opening if clicking on delete cross or like button
+            if (e.target.closest('.delete-cross') || e.target.closest('.like-button') || e.target.closest('form')) return;
+            const pinId = item.dataset.pinId || '';
+            if (!pinId || pinId === 'undefined' || !isNaN(pinId) === false) return; // Skip invalid pin IDs
+            openPinModal(pinId);
+        });
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const pinId = urlParams.get('pin_id');
+    if (pinId) {
+        const modal = document.getElementById('pinModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
     const modal = document.getElementById('pinModal');
     if (window.location.hash === '#pinModal' && modal) {
         modal.style.display = 'flex';

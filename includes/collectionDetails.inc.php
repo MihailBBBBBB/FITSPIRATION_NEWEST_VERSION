@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "dbh.inc.php";
+require_once "notifications.inc.php";
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -58,10 +59,14 @@ switch ($sort) {
 try {
     $pin_query = "
         SELECT p.id, p.img, p.title,
+               p.user_id as creator_id,
+               COALESCE(r.username, 'Unknown') as creator_name,
+               COALESCE(r.img, '') as creator_img,
                (SELECT COUNT(*) FROM likes l WHERE l.pin_id = p.id) as like_count,
                (SELECT COUNT(*) FROM likes l WHERE l.user_id = :user_id AND l.pin_id = p.id) as user_liked,
                (SELECT COUNT(*) FROM comments c WHERE c.pin_id = p.id) as comment_count
         FROM pins p
+        LEFT JOIN registration r ON p.user_id = r.id
         WHERE p.collection_id = :collection_id AND p.user_id = :user_id
         ORDER BY $orderBy
     ";
@@ -104,11 +109,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
             $stmt = $pdo->prepare($query);
             $stmt->execute([$user_id, $pin_id]);
             error_log("Like removed: user_id={$user_id}, pin_id={$pin_id}");
+
+            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+            if ($pin_owner_id) {
+                removeNotification($pdo, $pin_owner_id, $user_id, 'like', $pin_id);
+            }
         } else {
             $query = "INSERT INTO likes (user_id, pin_id, date) VALUES (?, ?, NOW())";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$user_id, $pin_id]);
             error_log("Like added: user_id={$user_id}, pin_id={$pin_id}");
+
+            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+            if ($pin_owner_id) {
+                addNotification($pdo, $pin_owner_id, $user_id, 'like', $pin_id);
+            }
         }
 
         // Redirect to preserve pin modal state
@@ -150,6 +165,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
         $stmt = $pdo->prepare($query);
         $stmt->execute([$pin_id, $user_id, $comment]);
         error_log("Comment added: user_id={$user_id}, pin_id={$pin_id}, comment={$comment}");
+
+        $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+        if ($pin_owner_id) {
+            addNotification($pdo, $pin_owner_id, $user_id, 'comment', $pin_id);
+        }
 
         // Redirect to preserve pin modal state
         $redirect_url = "collectionDetails.php?collection_id=" . urlencode($collection_id) . "&pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
@@ -247,17 +267,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_pin'])) {
 }
 
 // Load pin data for modal
-$modal_pin_data = ['image' => '', 'title' => '', 'like_count' => 0, 'user_liked' => false];
+$modal_pin_data = [
+    'image' => '',
+    'title' => '',
+    'like_count' => 0,
+    'user_liked' => false,
+    'creator_id' => '',
+    'creator_name' => 'Unknown',
+    'creator_img' => '../images/no_image.jpg'
+];
 $comments = [];
 if (isset($_GET['pin_id'])) {
     $pin_id = filter_var($_GET['pin_id'], FILTER_SANITIZE_NUMBER_INT);
 
     // Load pin data
     $query = "
-        SELECT p.id, p.img, p.title, 
+         SELECT p.id, p.img, p.title,
+             p.user_id as creator_id,
+             COALESCE(r.username, 'Unknown') as creator_name,
+             COALESCE(r.img, '') as creator_img,
                (SELECT COUNT(*) FROM likes WHERE pin_id = p.id) as like_count,
                EXISTS(SELECT 1 FROM likes WHERE pin_id = p.id AND user_id = ?) as user_liked
         FROM pins p
+         LEFT JOIN registration r ON p.user_id = r.id
         WHERE p.id = ? AND p.collection_id = ?
     ";
     $stmt = $pdo->prepare($query);
@@ -269,7 +301,10 @@ if (isset($_GET['pin_id'])) {
             'image' => $pin_data['img'] ? '../images/' . htmlspecialchars($pin_data['img']) : 'https://via.placeholder.com/600x800',
             'title' => htmlspecialchars($pin_data['title'] ?? 'Pin'),
             'like_count' => $pin_data['like_count'],
-            'user_liked' => $pin_data['user_liked']
+            'user_liked' => $pin_data['user_liked'],
+            'creator_id' => $pin_data['creator_id'] ?? '',
+            'creator_name' => htmlspecialchars($pin_data['creator_name'] ?? 'Unknown'),
+            'creator_img' => !empty($pin_data['creator_img']) ? '../images/' . htmlspecialchars($pin_data['creator_img']) : '../images/no_image.jpg'
         ];
     }
 

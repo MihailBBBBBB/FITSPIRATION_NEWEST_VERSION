@@ -1,5 +1,6 @@
 <?php
 include_once '../includes/dbh.inc.php';
+include_once '../includes/notifications.inc.php';
 
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'date_desc'; // По умолчанию сортировка по дате (убывание)
@@ -28,11 +29,16 @@ try {
 
     $query = "
         SELECT p.id, p.title, p.img,
+               COALESCE(p.user_id, c.user_id) as creator_id,
+               COALESCE(pr.username, cr.username, 'Unknown') as creator_name,
+               COALESCE(pr.img, cr.img, '') as creator_img,
                (SELECT COUNT(*) FROM likes l WHERE l.pin_id = p.id) as like_count,
                (SELECT COUNT(*) FROM likes l WHERE l.user_id = :user_id AND l.pin_id = p.id) as user_liked,
-               (SELECT COUNT(*) FROM comments c WHERE c.pin_id = p.id) as comment_count
+               (SELECT COUNT(*) FROM comments c2 WHERE c2.pin_id = p.id) as comment_count
         FROM pins p
         INNER JOIN collections c ON p.collection_id = c.collection_id
+        LEFT JOIN registration pr ON p.user_id = pr.id
+        LEFT JOIN registration cr ON c.user_id = cr.id
         WHERE c.privacy = 'Public'
         AND p.title LIKE :search
         ORDER BY $orderBy
@@ -79,11 +85,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
             $stmt = $pdo->prepare($query);
             $stmt->execute([$user_id, $pin_id]);
             error_log("Like removed: user_id={$user_id}, pin_id={$pin_id}");
+
+            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+            if ($pin_owner_id) {
+                removeNotification($pdo, $pin_owner_id, $user_id, 'like', $pin_id);
+            }
         } else {
             $query = "INSERT INTO likes (user_id, pin_id, date) VALUES (?, ?, NOW())";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$user_id, $pin_id]);
             error_log("Like added: user_id={$user_id}, pin_id={$pin_id}");
+
+            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+            if ($pin_owner_id) {
+                addNotification($pdo, $pin_owner_id, $user_id, 'like', $pin_id);
+            }
         }
 
         // Сохраняем pin_id и sort для перенаправления
@@ -131,6 +147,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
         $stmt = $pdo->prepare($query);
         $stmt->execute([$pin_id, $user_id, $comment]);
         error_log("Comment added: user_id={$user_id}, pin_id={$pin_id}, comment={$comment}");
+
+        $pin_owner_id = getPinOwnerId($pdo, $pin_id);
+        if ($pin_owner_id) {
+            addNotification($pdo, $pin_owner_id, $user_id, 'comment', $pin_id);
+        }
 
         // Сохраняем pin_id и sort для перенаправления
         $redirect_url = "Home.php?pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
@@ -215,17 +236,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
 }
 
 // Загрузка данных пина для модала
-$modal_pin_data = ['image' => '', 'title' => '', 'like_count' => 0, 'user_liked' => false];
+$modal_pin_data = ['image' => '', 'title' => '', 'like_count' => 0, 'user_liked' => false, 'creator_name' => '', 'creator_id' => ''];
 if (isset($_GET['pin_id'])) {
     $pin_id = filter_var($_GET['pin_id'], FILTER_SANITIZE_NUMBER_INT);
     $user_id = $_SESSION['user_id'];
 
     // Загружаем данные пина
     $query = "
-        SELECT p.id, p.img, p.title, 
+        SELECT p.id, p.img, p.title,
+               COALESCE(p.user_id, c.user_id) as creator_id,
+               COALESCE(pr.username, cr.username, 'Unknown') as creator_name,
+               COALESCE(pr.img, cr.img, '') as creator_img,
                (SELECT COUNT(*) FROM likes WHERE pin_id = p.id) as like_count,
                EXISTS(SELECT 1 FROM likes WHERE pin_id = p.id AND user_id = ?) as user_liked
         FROM pins p
+        LEFT JOIN collections c ON p.collection_id = c.collection_id
+        LEFT JOIN registration pr ON p.user_id = pr.id
+        LEFT JOIN registration cr ON c.user_id = cr.id
         WHERE p.id = ?
     ";
     $stmt = $pdo->prepare($query);
@@ -237,7 +264,10 @@ if (isset($_GET['pin_id'])) {
             'image' => $pin_data['img'] ? '../images/' . htmlspecialchars($pin_data['img']) : '../images/no_image.jpg',
             'title' => htmlspecialchars($pin_data['title'] ?? 'Pin'),
             'like_count' => $pin_data['like_count'],
-            'user_liked' => $pin_data['user_liked']
+            'user_liked' => $pin_data['user_liked'],
+            'creator_name' => htmlspecialchars($pin_data['creator_name'] ?? 'Unknown'),
+            'creator_id' => $pin_data['creator_id'] ? htmlspecialchars($pin_data['creator_id']) : '',
+            'creator_img' => $pin_data['creator_img'] ? '../images/' . htmlspecialchars($pin_data['creator_img']) : '../images/no_image.jpg'
         ];
     }
     

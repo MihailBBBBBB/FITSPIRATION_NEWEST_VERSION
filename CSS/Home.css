@@ -52,7 +52,7 @@
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .pin-item:hover {
@@ -84,6 +84,21 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.pin-creator {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.pin-creator a {
+    color: #4299e1;
+    text-decoration: none;
+}
+
+.pin-creator a:hover {
+    text-decoration: underline;
 }
 
 .pin-stats {
@@ -159,27 +174,113 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 350px;
 }
 
 .modal-image {
-    flex: 1;
+    flex: 1.4;
     overflow: hidden;
+    background: #000;
 }
 
 .modal-pin-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background-color: #000;
 }
 
 .modal-details {
     flex: 1;
-    background-color: #000;
-    color: #fff;
+    background-color: #fff;
+    color: #111;
     padding: 1rem;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+}
+
+.modal-creator-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.creator-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+.creator-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.creator-link {
+    text-decoration: none;
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
+.creator-link:hover {
+    text-decoration: underline;
+}
+
+.creator-subtitle {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #4b5563;
+}
+
+.modal-pin-stats {
+    margin: 0.4rem 0 0.8rem;
+}
+
+.modal-comment-section {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    padding: 0.6rem;
+}
+
+.comment-list li {
+    border-bottom: 1px solid #e2e8f0;
+    color: #111;
+}
+
+.comment-input {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+}
+
+.comment-input input {
+    flex: 1;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.comment-input button {
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
 }
 
 .modal-pin-stats {

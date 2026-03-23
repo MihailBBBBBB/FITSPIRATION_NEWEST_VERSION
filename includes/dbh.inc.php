@@ -1,6 +1,6 @@
 <?php
 
-$dsn = "mysql:host=localhost;dbname=fitspiration;port=3307";
+$dsn = "mysql:host=localhost;dbname=fitspiration;port=3306";
 $dbusername = "root";
 $dbpassword = "";
 

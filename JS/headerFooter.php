@@ -1,12 +1,19 @@
 <?php
 $headerHTML = '';
 require_once '../includes/dbh.inc.php';
+require_once '../includes/notifications.inc.php';
 
-$user_id = $_SESSION['user_id'];
-$query = "SELECT is_admin FROM registration WHERE id = :user_id";
-$stmt = $pdo->prepare($query);
-$stmt->execute(['user_id' => $user_id]);
-$result = $stmt->fetch(PDO::FETCH_ASSOC);
+$user_id = $_SESSION['user_id'] ?? null;
+$result = null;
+$unread_notifications = 0;
+
+if ($user_id) {
+    $query = "SELECT is_admin FROM registration WHERE id = :user_id";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute(['user_id' => $user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $unread_notifications = getUnreadNotificationsCount($pdo, $user_id);
+}
 
 
 if ($result && $result['is_admin'] == 1) {
@@ -22,6 +29,7 @@ if ($result && $result['is_admin'] == 1) {
                 <button class="login-btn" onclick="window.location.href=\'AdminPanel.php\'">Admin</button>
                 <button class="profile-pic" onclick="window.location.href=\'Profile.php\'"><i class="fa-solid fa-circle-user"></i></button>
                 <button class="login-btn" onclick="window.location.href=\'../includes/LogOut.inc.php\'">Log Out</button>
+                <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
         </header>
     ';
@@ -37,6 +45,7 @@ if ($result && $result['is_admin'] == 1) {
             <div class="buttons">
                 <button class="login-btn" onclick="window.location.href=\'LogIn.php\'">Log In</button>
                 <button class="signup-btn" onclick="window.location.href=\'Registration.php\'">Sign Up</button>
+                <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
         </header>
     ';
@@ -52,6 +61,7 @@ if ($result && $result['is_admin'] == 1) {
             <div class="buttons">
                 <button class="profile-pic" onclick="window.location.href=\'Profile.php\'"><i class="fa-solid fa-circle-user"></i></button>
                 <button class="login-btn" onclick="window.location.href=\'../includes/LogOut.inc.php\'">Log Out</button>
+                <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
         </header>
     ';
@@ -106,7 +116,15 @@ class SpecialAside extends HTMLElement {
             <ul>
                 <li><a href='Home.php'><i class="fas fa-house"></i> Home</a></li>
                 <li><a href='Main.php'><i class="fas fa-th-large"></i> Categories</a></li>
-                <li><a href='#'><i class="fas fa-bell"></i> Notifications</a></li>
+                <li><a href='OutfitBuilder.php'><i class="fas fa-shirt"></i> Outfit Builder</a></li>
+                <li>
+                    <a href='Notifications.php' class='notifications-link'>
+                        <i class="fas fa-bell"></i> Notifications
+                        <?php if ($unread_notifications > 0): ?>
+                            <span class="notification-badge"><?php echo (int)$unread_notifications; ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
             </ul>
         </aside>
         `
@@ -115,18 +133,14 @@ class SpecialAside extends HTMLElement {
 
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
-        const searchForm = document.getElementById('searchForm');
-        
-        // Обработка нажатия Enter в поле поиска
+
         searchInput.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 const searchTerm = searchInput.value.trim();
                 if (searchTerm) {
-                    console.log('Search term entered:', searchTerm);
                     window.location.href = 'Home.php?search=' + encodeURIComponent(searchTerm);
                 } else {
-                    console.log('Search term is empty, redirecting to Home.php');
                     window.location.href = 'Home.php';
                 }
             }

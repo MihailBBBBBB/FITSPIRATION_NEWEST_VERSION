@@ -72,6 +72,7 @@ body {
     text-align: center;
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .upload-box input {
@@ -83,6 +84,30 @@ body {
     font-size: 1.2rem;
     color: #007bff;
     font-weight: bold;
+}
+
+.upload-preview {
+    display: none;
+    width: 100%;
+    max-width: 260px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin-top: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.upload-preview.visible {
+    display: block;
+}
+
+.upload-box.has-preview {
+    justify-content: center;
+}
+
+.upload-box.has-preview label,
+.upload-box.has-preview .upload-hint {
+    display: none;
 }
 
 .form-section {

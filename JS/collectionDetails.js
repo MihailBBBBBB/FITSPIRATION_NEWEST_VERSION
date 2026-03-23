@@ -1,35 +1,58 @@
-function openPinModal(imageSrc, title, pinId, likeCount, userLiked) {
+function populatePinModal(pinElement) {
+    if (!pinElement) return;
+
+    const imageElement = pinElement.querySelector('.pin-image');
+    const imageSrc = imageElement?.dataset.image || '../images/no_image.jpg';
+    const title = imageElement?.dataset.title || pinElement.dataset.title || 'Pin';
+    const pinId = imageElement?.dataset.pinId || pinElement.dataset.pinId || '';
+    const likeCount = Number(imageElement?.dataset.likeCount || 0);
+    const userLiked = imageElement?.dataset.userLiked === '1';
+    const creatorId = imageElement?.dataset.creatorId || '';
+    const creatorName = imageElement?.dataset.creatorName || 'Unknown';
+    const creatorImg = imageElement?.dataset.creatorImg || '../images/no_image.jpg';
+
     const modalPinImage = document.getElementById('modalPinImage');
     const modalPinTitle = document.getElementById('modalPinTitle');
     const modalLikeButton = document.getElementById('modalLikeButton');
     const modalLikeCount = document.getElementById('modalLikeCount');
-    
-    if (!modalPinImage || !modalPinTitle || !modalLikeButton || !modalLikeCount) {
-        console.error('One or more modal elements are missing:', {
-            modalPinImage: !!modalPinImage,
-            modalPinTitle: !!modalPinTitle,
-            modalLikeButton: !!modalLikeButton,
-            modalLikeCount: !!modalLikeCount
-        });
-        return;
+    const modalCreatorLink = document.getElementById('modalCreatorLink');
+    const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
+
+    if (modalPinImage) modalPinImage.src = imageSrc;
+    if (modalPinTitle) modalPinTitle.textContent = title;
+    if (modalLikeButton) {
+        modalLikeButton.dataset.pinId = pinId;
+        modalLikeButton.classList.toggle('liked', userLiked);
     }
-    
-    modalPinImage.src = imageSrc;
-    modalPinTitle.textContent = title;
-    modalLikeButton.setAttribute('data-pin-id', pinId);
-    modalLikeCount.textContent = likeCount;
-    modalLikeButton.classList.toggle('liked', userLiked);
-    
+    if (modalLikeCount) modalLikeCount.textContent = likeCount;
+    if (modalCreatorAvatar) modalCreatorAvatar.src = creatorImg;
+
+    if (modalCreatorLink) {
+        if (creatorId) {
+            modalCreatorLink.href = 'Profile.php?user_id=' + encodeURIComponent(creatorId);
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'auto';
+            modalCreatorLink.style.color = '#1d4ed8';
+        } else {
+            modalCreatorLink.href = '#';
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'none';
+            modalCreatorLink.style.color = '#6b7280';
+        }
+    }
+
     const forms = document.querySelectorAll('#pinModal form input[name="pin_id"]');
     forms.forEach(formInput => {
         formInput.value = pinId;
     });
-    
-    const currentSearch = window.location.search || '';
-    const newSearch = currentSearch.includes('pin_id=') 
-    ? currentSearch.replace(/pin_id=\d+/, `pin_id=${pinId}`)
-    : `${currentSearch}${currentSearch ? '&' : '?'}pin_id=${pinId}&collection_id=<?php echo urlencode($collection_id); ?>&sort=<?php echo urlencode($sort); ?>`;
-    window.location.href = `collectionDetails.php${newSearch}#pinModal`;
+}
+
+function openPinModal(pinId) {
+    if (!pinId) return;
+    const url = new URL(window.location);
+    url.searchParams.set('pin_id', pinId);
+    url.hash = 'pinModal';
+    window.location.href = url.toString();
 }
 
 function closePinModal() {
@@ -45,27 +68,51 @@ function closePinModal() {
 
 function deleteComment(commentId, pinId) {
     if (!confirm('Are you sure you want to delete this comment?')) return;
-    
+
     const formData = new FormData();
-    formData.append('delete_comment', true);
+    formData.append('delete_comment', '1');
     formData.append('comment_id', commentId);
     formData.append('pin_id', pinId);
-    
-    fetch(`collectionDetails.php?collection_id=<?php echo urlencode($collection_id); ?>&sort=<?php echo urlencode($sort); ?>&pin_id=${pinId}`, {
+
+    const url = new URL(window.location);
+    url.searchParams.set('pin_id', pinId);
+
+    fetch(url.toString(), {
         method: 'POST',
         body: formData
     })
     .then(response => response.text())
     .then(() => {
-        window.location.href = `collectionDetails.php?collection_id=<?php echo urlencode($collection_id); ?>&pin_id=${pinId}&sort=<?php echo urlencode($sort); ?>#pinModal`;
+        const redirectUrl = new URL(window.location);
+        redirectUrl.searchParams.set('pin_id', pinId);
+        redirectUrl.hash = 'pinModal';
+        window.location.href = redirectUrl.toString();
     })
     .catch(error => console.error('Error deleting comment:', error));
 }
 
 window.addEventListener('load', function() {
-    const modal = document.getElementById('pinModal');
-    if (window.location.hash === '#pinModal' && modal) {
-        modal.style.display = 'flex';
+    const pinItems = document.querySelectorAll('.pin-item[data-pin-id]');
+    pinItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-cross') || e.target.closest('.like-button') || e.target.closest('form')) return;
+
+            const pinId = item.dataset.pinId || '';
+            if (!pinId || isNaN(Number(pinId))) return;
+
+            openPinModal(pinId);
+        });
+    });
+
+    const pinId = new URLSearchParams(window.location.search).get('pin_id');
+    if (pinId) {
+        const selectedPin = document.querySelector('.pin-item[data-pin-id="' + CSS.escape(pinId) + '"]');
+        populatePinModal(selectedPin);
+
+        const modal = document.getElementById('pinModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 });
 
@@ -87,7 +134,6 @@ function applySort() {
     const sortValue = document.getElementById('sort').value;
     const currentUrl = new URL(window.location);
     currentUrl.searchParams.set('sort', sortValue);
-    currentUrl.searchParams.set('collection_id', '<?php echo urlencode($collection_id); ?>');
     window.location.href = currentUrl.toString();
 }
 
@@ -105,19 +151,23 @@ function closeDeleteModal() {
 }
 
 function confirmDelete() {
-    const type = document.querySelector('.delete-modal-confirm').getAttribute('data-type');
     const id = document.querySelector('.delete-modal-confirm').getAttribute('data-id');
     const formData = new FormData();
-    formData.append('delete_pin', true);
+    formData.append('delete_pin', '1');
     formData.append('pin_id', id);
-    
-    fetch(`collectionDetails.php?collection_id=<?php echo urlencode($collection_id); ?>&sort=<?php echo urlencode($sort); ?>`, {
+
+    const url = new URL(window.location);
+
+    fetch(url.toString(), {
         method: 'POST',
         body: formData
     })
     .then(response => response.text())
     .then(() => {
-        window.location.href = `collectionDetails.php?collection_id=<?php echo urlencode($collection_id); ?>&sort=<?php echo urlencode($sort); ?>`;
+        const redirectUrl = new URL(window.location);
+        redirectUrl.searchParams.delete('pin_id');
+        redirectUrl.hash = '';
+        window.location.href = redirectUrl.toString();
     })
     .catch(error => console.error('Error deleting pin:', error));
     closeDeleteModal();

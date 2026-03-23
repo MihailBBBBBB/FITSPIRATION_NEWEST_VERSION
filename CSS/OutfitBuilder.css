@@ -1,0 +1,340 @@
+
+
+.outfit-page {
+    margin-left: 160px;
+    padding: 24px;
+    width: calc(100% - 160px);
+    box-sizing: border-box;
+}
+
+.builder-shell {
+    display: grid;
+    grid-template-columns: 280px minmax(520px, 1fr) 280px;
+    gap: 16px;
+    align-items: start;
+}
+
+.builder-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+}
+
+.builder-panel h2 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+}
+
+.helper-text {
+    margin: 0 0 12px;
+    color: #6b7280;
+    font-size: 0.92rem;
+}
+
+.upload-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #111827;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#wardrobeUpload {
+    display: none;
+}
+
+.wardrobe-list {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+    max-height: 62vh;
+    overflow: auto;
+}
+
+.wardrobe-card {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px;
+    background: #f9fafb;
+}
+
+.wardrobe-card img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.wardrobe-meta {
+    min-width: 0;
+}
+
+.wardrobe-title {
+    display: block;
+    font-size: 0.84rem;
+    color: #374151;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.wardrobe-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.wardrobe-actions button {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.wardrobe-actions button.secondary {
+    background: #374151;
+}
+
+.builder-stage-wrap {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    padding: 14px;
+}
+
+.stage-toolbar h1 {
+    margin: 0;
+    font-size: 1.55rem;
+}
+
+.stage-toolbar p {
+    margin: 6px 0 12px;
+    color: #6b7280;
+}
+
+.builder-stage {
+    position: relative;
+    width: 100%;
+    min-height: 72vh;
+    border-radius: 14px;
+    border: 1px solid #d1d5db;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(242, 246, 250, 0.95)),
+        repeating-linear-gradient(0deg, rgba(17, 24, 39, 0.03), rgba(17, 24, 39, 0.03) 16px, transparent 16px, transparent 32px);
+    overflow: hidden;
+}
+
+.mannequin {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.mannequin .head,
+.mannequin .torso,
+.mannequin .arm,
+.mannequin .leg {
+    position: absolute;
+    background: rgba(30, 41, 59, 0.14);
+    border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+.mannequin .head {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    top: 60px;
+    left: calc(50% - 32px);
+}
+
+.mannequin .torso {
+    width: 130px;
+    height: 210px;
+    border-radius: 70px 70px 40px 40px;
+    top: 128px;
+    left: calc(50% - 65px);
+}
+
+.mannequin .arm {
+    width: 36px;
+    height: 180px;
+    border-radius: 28px;
+    top: 146px;
+}
+
+.mannequin .arm.left {
+    left: calc(50% - 108px);
+    transform: rotate(10deg);
+}
+
+.mannequin .arm.right {
+    left: calc(50% + 72px);
+    transform: rotate(-10deg);
+}
+
+.mannequin .leg {
+    width: 48px;
+    height: 220px;
+    border-radius: 30px;
+    top: 332px;
+}
+
+.mannequin .leg.left {
+    left: calc(50% - 52px);
+}
+
+.mannequin .leg.right {
+    left: calc(50% + 4px);
+}
+
+.outfit-canvas {
+    position: absolute;
+    inset: 0;
+}
+
+.outfit-item {
+    position: absolute;
+    transform-origin: center center;
+    cursor: grab;
+    user-select: none;
+}
+
+.outfit-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.outfit-item.selected {
+    outline: 2px dashed #2563eb;
+    outline-offset: 3px;
+    border-radius: 8px;
+}
+
+.control-group {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+}
+
+.action-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.action-grid button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    background: #111827;
+    color: #ffffff;
+}
+
+.action-grid button.primary {
+    background: #1d4ed8;
+}
+
+.action-grid button.danger {
+    background: #b91c1c;
+}
+
+.action-grid button.muted {
+    background: #4b5563;
+}
+
+.save-outfit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.save-outfit-section input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.save-outfit-section input[type="text"]::placeholder {
+    color: rgba(241,245,249,0.45);
+}
+
+.save-outfit-section button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: #10b981;
+    color: #fff;
+    transition: background 0.15s;
+}
+
+.save-outfit-section button:hover:not(:disabled) {
+    background: #059669;
+}
+
+.save-outfit-section button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.status-message {
+    min-height: 20px;
+    margin: 10px 2px 2px;
+    font-size: 0.88rem;
+    color: #1f2937;
+}
+
+@media (max-width: 1200px) {
+    .builder-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .outfit-page {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .builder-stage {
+        min-height: 58vh;
+    }
+}

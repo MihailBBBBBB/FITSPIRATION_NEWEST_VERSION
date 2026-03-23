@@ -17,6 +17,7 @@ include_once '../includes/CreatePin.inc.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="../CSS/Create.css"/>
     <link rel="stylesheet" href="../CSS/Main.css"/>
+    <script src="../JS/translator.js"></script>
 </head>
 <body>
     <special-header></special-header>
@@ -36,8 +37,8 @@ include_once '../includes/CreatePin.inc.php';
                             <div style="font-size: 2rem;">⬆️</div>
                             <p>Choose a file</p>
                         </label>
-                        <input type="file" id="file-upload" name="pin_image" accept="image/png,image/jpeg" />
-                        <p style="font-size: 0.85rem; margin-top: 20px;">We recommend using high-quality files in .jpg or .png format (less than 20 MB).</p>
+                        <input type="file" id="file-upload" class="preview-input" name="pin_image" accept="image/png,image/jpeg" />
+                        <p class="upload-hint" style="font-size: 0.85rem; margin-top: 20px;">We recommend using high-quality files in .jpg or .png format (less than 20 MB).</p>
                         <!-- File upload section for pin image -->
                     </div>
                     
@@ -62,6 +63,7 @@ include_once '../includes/CreatePin.inc.php';
     </div>
 
     <special-footer></special-footer>
+    <script src="../JS/CreateMediaPreview.js"></script>
 </body>
 </html>
 
