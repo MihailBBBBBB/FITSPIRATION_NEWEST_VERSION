@@ -3,7 +3,7 @@ require_once __DIR__ . '/reports.inc.php';
 require_once __DIR__ . '/csrf.inc.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../HTML/Login.php?error=notloggedin');
+    header('Location: ../HTML/LogIn.php?error=notloggedin');
     exit();
 }
 

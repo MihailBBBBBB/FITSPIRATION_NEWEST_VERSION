@@ -41,7 +41,7 @@ function sendAjaxJson(array $payload): void {
 $session_user_id = $_SESSION['user_id'] ?? null;
 $view_user_id = isset($_GET['user_id']) ? filter_var($_GET['user_id'], FILTER_SANITIZE_NUMBER_INT) : $session_user_id;
 if (!$view_user_id) {
-    header("Location: ../HTML/Login.php?error=notloggedin");
+    header("Location: ../HTML/LogIn.php?error=notloggedin");
     exit();
 }
 
@@ -76,13 +76,13 @@ try {
     $users = $stmt2->fetch(PDO::FETCH_ASSOC);
 
     if (!$users) {
-        header("Location: ../HTML/Login.php?error=usernotfound");
+        header("Location: ../HTML/LogIn.php?error=usernotfound");
         exit();
     }
     error_log("User data fetched for user_id {$view_user_id}: username={$users['username']}");
 } catch (PDOException $e) {
     error_log('Error fetching user data: ' . $e->getMessage());
-    header("Location: ../HTML/Login.php?error=dberror");
+    header("Location: ../HTML/LogIn.php?error=dberror");
     exit();
 }
 
@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_report'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
 
@@ -286,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_report'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['follow_action'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
 
@@ -313,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['update_avatar']) && 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
     if ((int)$view_user_id !== (int)$session_user_id) {
@@ -532,7 +532,7 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
     if ((int) $view_user_id !== (int) $session_user_id) {
@@ -581,7 +581,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
@@ -626,7 +626,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
     if (!$session_user_id) {
-        header("Location: ../HTML/Login.php?error=notloggedin");
+        header("Location: ../HTML/LogIn.php?error=notloggedin");
         exit();
     }
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);

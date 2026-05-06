@@ -50,7 +50,7 @@ if ($result && $result['is_admin'] == 1) {
         <header class="header">
             <h1 class="no-translate" onclick="window.location.href=\'Main.php\'">FITS<span>PIRATION</span></h1>
             <div class="buttons">
-                <button class="login-btn header-action login-action-btn" onclick="window.location.href=\'Login.php\'"><i class="fa-solid fa-right-to-bracket"></i><span>Log In</span></button>
+                <button class="login-btn header-action login-action-btn" onclick="window.location.href=\'LogIn.php\'"><i class="fa-solid fa-right-to-bracket"></i><span>Log In</span></button>
                 <button class="signup-btn header-action signup-action-btn" onclick="window.location.href=\'Registration.php\'"><i class="fa-solid fa-user-plus"></i><span>Sign Up</span></button>
                 <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
