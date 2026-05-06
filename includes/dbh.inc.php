@@ -1,5 +1,25 @@
 <?php
 
+function parseFitspirationDatabaseUrl(string $databaseUrl): ?array {
+    $parts = parse_url($databaseUrl);
+    if ($parts === false || !isset($parts['host'])) {
+        return null;
+    }
+
+    $databaseName = '';
+    if (isset($parts['path'])) {
+        $databaseName = trim($parts['path'], '/');
+    }
+
+    return [
+        'host' => (string) $parts['host'],
+        'port' => isset($parts['port']) ? (string) $parts['port'] : '3306',
+        'name' => $databaseName,
+        'user' => isset($parts['user']) ? rawurldecode((string) $parts['user']) : '',
+        'password' => isset($parts['pass']) ? rawurldecode((string) $parts['pass']) : '',
+    ];
+}
+
 function loadFitspirationEnv(string $envPath): void {
     if (!is_readable($envPath)) {
         return;
@@ -47,11 +67,16 @@ function loadFitspirationEnv(string $envPath): void {
 
 loadFitspirationEnv(dirname(__DIR__) . '/.env');
 
-$dbhost = getenv('FITSPIRATION_DB_HOST') ?: 'localhost';
-$dbname = getenv('FITSPIRATION_DB_NAME') ?: 'fitspiration';
-$dbport = getenv('FITSPIRATION_DB_PORT') ?: '3306';
-$dbusername = getenv('FITSPIRATION_DB_USER') ?: 'root';
-$dbpassword = getenv('FITSPIRATION_DB_PASSWORD');
+$databaseUrl = getenv('FITSPIRATION_DB_URL');
+$databaseConfig = ($databaseUrl !== false && $databaseUrl !== '')
+    ? parseFitspirationDatabaseUrl($databaseUrl)
+    : null;
+
+$dbhost = $databaseConfig['host'] ?? (getenv('FITSPIRATION_DB_HOST') ?: 'localhost');
+$dbname = $databaseConfig['name'] ?? (getenv('FITSPIRATION_DB_NAME') ?: 'fitspiration');
+$dbport = $databaseConfig['port'] ?? (getenv('FITSPIRATION_DB_PORT') ?: '3306');
+$dbusername = $databaseConfig['user'] ?? (getenv('FITSPIRATION_DB_USER') ?: 'root');
+$dbpassword = $databaseConfig['password'] ?? getenv('FITSPIRATION_DB_PASSWORD');
 
 if ($dbpassword === false) {
     $dbpassword = '';
@@ -64,7 +89,14 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    error_log('Database connection failed: ' . $e->getMessage());
+    error_log(sprintf(
+        'Database connection failed for host=%s port=%s db=%s user=%s: %s',
+        $dbhost,
+        $dbport,
+        $dbname,
+        $dbusername,
+        $e->getMessage()
+    ));
 
     if (PHP_SAPI === 'cli') {
         fwrite(STDERR, "Database connection failed." . PHP_EOL);
