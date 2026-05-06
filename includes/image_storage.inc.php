@@ -4,24 +4,54 @@ function getFitspirationImagesDirectory(): string {
     return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
 }
 
+function describeFitspirationPathState(string $path): string {
+    clearstatcache(true, $path);
+
+    $exists = is_dir($path) ? 'yes' : 'no';
+    $writable = is_writable($path) ? 'yes' : 'no';
+    $permissions = is_dir($path) ? substr(sprintf('%o', fileperms($path)), -4) : 'missing';
+
+    return sprintf('path=%s exists=%s writable=%s perms=%s', $path, $exists, $writable, $permissions);
+}
+
 function ensureFitspirationImagesDirectory(): array {
     $directory = getFitspirationImagesDirectory();
 
     if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+        error_log('Image storage init failed: ' . describeFitspirationPathState($directory));
         return [
             'success' => false,
             'path' => $directory,
-            'error' => 'Upload directory could not be created.',
+            'error' => 'Upload directory could not be created. ' . describeFitspirationPathState($directory),
         ];
     }
 
     if (!is_writable($directory)) {
+        @chmod($directory, 0777);
+        clearstatcache(true, $directory);
+    }
+
+    if (!is_writable($directory)) {
+        error_log('Image storage not writable: ' . describeFitspirationPathState($directory));
         return [
             'success' => false,
             'path' => $directory,
-            'error' => 'Upload directory is not writable.',
+            'error' => 'Upload directory is not writable. ' . describeFitspirationPathState($directory),
         ];
     }
+
+    $probePath = $directory . '.write-test-' . uniqid('', true);
+    $probeWriteResult = @file_put_contents($probePath, 'ok');
+    if ($probeWriteResult === false) {
+        error_log('Image storage write probe failed: ' . describeFitspirationPathState($directory));
+        return [
+            'success' => false,
+            'path' => $directory,
+            'error' => 'Upload directory failed write test. ' . describeFitspirationPathState($directory),
+        ];
+    }
+
+    @unlink($probePath);
 
     return [
         'success' => true,

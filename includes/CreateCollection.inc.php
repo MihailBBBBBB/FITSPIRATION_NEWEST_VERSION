@@ -31,6 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] == 0) {
         $result = saveFitspirationUploadedImage($_FILES['cover_image'], 'collection_');
         if (!$result['success']) {
+            error_log('CreateCollection image upload failed: ' . (string) $result['error']);
             $_SESSION['collection_error'] = $result['error'];
             header("Location: ../HTML/CreateCollection.php?error=invalidimage");
             exit();
@@ -49,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: ../HTML/Profile.php?collection=created");
         exit();
     } catch (PDOException $e) {
+        error_log('CreateCollection database error: ' . $e->getMessage());
         $_SESSION['collection_error'] = "Database error. Please try again later.";
         header("Location: ../HTML/CreateCollection.php?error=dberror");
         exit();
