@@ -50,9 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Insert user with username into database
-        $query = "INSERT INTO registration (email, password, birthdate, username) VALUES (?, ?, ?, ?);";
+        $query = "INSERT INTO registration (email, password, birthdate, username, banned) VALUES (?, ?, ?, ?, ?);";
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$email, $passwordHash, $birthdate, $username]);
+        $stmt->execute([$email, $passwordHash, $birthdate, $username, 0]);
 
         $user_id = $pdo->lastInsertId();
         session_regenerate_id(true);
