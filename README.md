@@ -2,8 +2,6 @@
 
 FITSPIRATION
 
-> i Projekta nosaukums ir tieši tāds pats, kā kvalifikācijas darba nosaukums
-
 ## Projekta apraksts
 
 Šis ir kvalifikācijas darba projekts PIKC "Rīgas Valsts tehnikums" repozitorijam. FITSPIRATION ir sociāla tīmekļa platforma modes un stila iedvesmai, kur lietotāji var publicēt pinus, veidot kolekcijas, komentēt, atzīmēt ar Patīk, sekot citiem lietotājiem un saņemt personalizētu satura plūsmu.
@@ -12,7 +10,6 @@ Projektā ir ieviestas arī papildu funkcijas: Outfit Builder (tērpa veidošana
 
 Gala produkts ir pilnvērtīga interaktīva web lietotne ar autentifikāciju, datubāzi un dinamisku UI, kas darbojas pārlūkā.
 
-> i Projekta aprakstā jāparādās, par ko ir projekts un kāds ir gala produkts, ko tas prot.
 
 ## Izmantotās tehnoloģijas
 
@@ -26,7 +23,6 @@ Projektā tiek izmantots:
 - WebSocket
 - XAMPP
 
-> i Uzskaitam visas gan valodas, gan frameworks
 
 ## Izmantotie avoti
 
@@ -37,5 +33,3 @@ Projektā tiek izmantots:
 3. [MySQL 8.0 Reference Manual](https://dev.mysql.com/doc/) - izmantots SQL vaicājumu, tabulu un indeksu veidošanai.
 
 4. [Font Awesome](https://fontawesome.com/) - izmantots interfeisa ikonām navigācijā un pogās.
-
-> ! Obligāti jānorāda visi avoti, kas ir izmantoti, kas ir skatīts, kāds kods ir kopēts, ja tas netiks norādīts un tiks identificēts, ka kods ir kopēts darbs netiks ieskaitīts.
