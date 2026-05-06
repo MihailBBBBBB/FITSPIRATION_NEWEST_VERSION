@@ -200,11 +200,12 @@ function getUserChallengeBadgeStats(PDO $pdo, int $userId): array {
     $participationWeekKeys = array_values(array_unique(array_filter(array_map('strval', $participationStmt->fetchAll(PDO::FETCH_COLUMN)))));
 
     $votedWeeksStmt = $pdo->prepare(
-        'SELECT DISTINCT c.week_key
+           'SELECT c.week_key
          FROM outfit_challenge_votes v
          INNER JOIN outfit_challenges c ON c.id = v.challenge_id
          WHERE v.voter_id = ?
-         ORDER BY c.starts_at DESC, c.id DESC'
+            GROUP BY c.week_key
+            ORDER BY MAX(c.starts_at) DESC, MAX(c.id) DESC'
     );
     $votedWeeksStmt->execute([$userId]);
     $votedWeekKeys = array_values(array_unique(array_filter(array_map('strval', $votedWeeksStmt->fetchAll(PDO::FETCH_COLUMN)))));
