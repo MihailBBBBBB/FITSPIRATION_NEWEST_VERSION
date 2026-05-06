@@ -11,7 +11,8 @@ require_once __DIR__ . '/../includes/websocket_auth.inc.php';
 ensureNotificationsTable($pdo);
 
 $address = '0.0.0.0';
-$port = 8081;
+$port = (int) (getenv('PORT') ?: 8081);
+$displayHost = getenv('FITSPIRATION_WS_PUBLIC_HOST') ?: '127.0.0.1';
 $server = stream_socket_server("tcp://{$address}:{$port}", $errorNumber, $errorString);
 
 if ($server === false) {
@@ -304,7 +305,7 @@ function handleClientPayload(array $payload, int $clientId, array &$clients, arr
     }
 }
 
-echo '[' . date('Y-m-d H:i:s') . "] Messages WebSocket server listening on ws://127.0.0.1:{$port}" . PHP_EOL;
+echo '[' . date('Y-m-d H:i:s') . "] Messages WebSocket server listening on ws://{$displayHost}:{$port}" . PHP_EOL;
 
 while (true) {
     $readSockets = [$server];
