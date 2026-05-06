@@ -54,7 +54,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $updateStmt->execute([$migratedHash, $user['id']]);
                 }
 
-                session_start();
+                if (session_status() !== PHP_SESSION_ACTIVE) {
+                    session_start();
+                }
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $user['id']; 
                 $_SESSION['user_email'] = $user['email'];
