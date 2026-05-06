@@ -1,6 +1,7 @@
 <?php
 include_once '../includes/dbh.inc.php';
 include_once '../includes/notifications.inc.php';
+include_once '../includes/csrf.inc.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 
@@ -10,6 +11,7 @@ if (!$user_id) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireValidCsrfToken();
     if (isset($_POST['mark_all_read'])) {
         markAllNotificationsAsRead($pdo, $user_id);
         header('Location: Notifications.php');

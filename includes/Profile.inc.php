@@ -1,8 +1,41 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include_once '../includes/dbh.inc.php';
 include_once '../includes/follow.inc.php';
 include_once '../includes/notifications.inc.php';
+include_once '../includes/reports.inc.php';
+include_once '../includes/likes.inc.php';
+include_once '../includes/csrf.inc.php';
+include_once '../includes/outfits_schema.inc.php';
+include_once '../includes/collection_collaboration.inc.php';
+
+ensureModerationTables($pdo);
+ensureCollectionCollaborationTables($pdo);
+
+$is_ajax_request = (
+    (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+    || (isset($_POST['ajax']) && $_POST['ajax'] === '1')
+    || (isset($_GET['ajax']) && $_GET['ajax'] === '1')
+);
+
+if ($is_ajax_request && ob_get_level() === 0) {
+    ob_start();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireValidCsrfToken($is_ajax_request);
+}
+
+function sendAjaxJson(array $payload): void {
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($payload);
+    exit();
+}
 
 $session_user_id = $_SESSION['user_id'] ?? null;
 $view_user_id = isset($_GET['user_id']) ? filter_var($_GET['user_id'], FILTER_SANITIZE_NUMBER_INT) : $session_user_id;
@@ -14,6 +47,26 @@ if (!$view_user_id) {
 $user_id = $session_user_id; // keep for current logged-in user actions
 $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'date_desc'; 
 error_log('Received sort: ' . $sort);
+
+$current_user_name = 'You';
+$current_user_image = '../images/no_image.jpg';
+if ($session_user_id) {
+    try {
+        $currentUserStmt = $pdo->prepare('SELECT username, img FROM registration WHERE id = ? LIMIT 1');
+        $currentUserStmt->execute([$session_user_id]);
+        $currentUser = $currentUserStmt->fetch(PDO::FETCH_ASSOC);
+        if ($currentUser) {
+            if (!empty($currentUser['username'])) {
+                $current_user_name = $currentUser['username'];
+            }
+            if (!empty($currentUser['img'])) {
+                $current_user_image = '../images/' . htmlspecialchars($currentUser['img']);
+            }
+        }
+    } catch (PDOException $e) {
+        error_log('Error fetching current user profile: ' . $e->getMessage());
+    }
+}
 
 function validateAndSaveImage($file, $upload_dir = null) {
     if ($file['error'] !== 0) {
@@ -71,6 +124,8 @@ try {
     exit();
 }
 
+$profileChallengeStats = getUserChallengeBadgeStats($pdo, (int) $view_user_id);
+
 $followers_count = getFollowersCount($pdo, $view_user_id);
 $following_count = getFollowingCount($pdo, $view_user_id);
 $is_following = $session_user_id ? isFollowing($pdo, $session_user_id, $view_user_id) : false;
@@ -95,12 +150,90 @@ try {
     $following_users = [];
 }
 
+if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['action'] ?? '') === 'get_pin_modal') {
+    $pin_id = filter_var($_GET['pin_id'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+    if ((int)$pin_id <= 0) {
+        sendAjaxJson(['success' => false, 'message' => 'Invalid pin id.']);
+    }
+
+    try {
+        $pinQuery = "
+            SELECT p.id, p.img, p.title,
+                   p.user_id as creator_id,
+                   COALESCE(r.username, 'Unknown') as creator_name,
+                   COALESCE(r.img, '') as creator_img,
+                   (SELECT COUNT(*) FROM likes WHERE pin_id = p.id) as like_count,
+                   EXISTS(SELECT 1 FROM likes WHERE pin_id = p.id AND user_id = ?) as user_liked
+            FROM pins p
+            LEFT JOIN registration r ON p.user_id = r.id
+            WHERE p.id = ?
+            LIMIT 1
+        ";
+        $pinStmt = $pdo->prepare($pinQuery);
+        $pinStmt->execute([(int)$session_user_id, (int)$pin_id]);
+        $pinData = $pinStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$pinData) {
+            sendAjaxJson(['success' => false, 'message' => 'Pin not found.']);
+        }
+
+        $commentQuery = "
+            SELECT c.id, c.comment, c.created_at, c.user_id, r.username, r.img as user_img
+            FROM comments c
+            JOIN registration r ON c.user_id = r.id
+            WHERE c.pin_id = ?
+            ORDER BY c.created_at DESC
+        ";
+        $commentStmt = $pdo->prepare($commentQuery);
+        $commentStmt->execute([(int)$pin_id]);
+        $commentsData = $commentStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $creatorId = (int)($pinData['creator_id'] ?? 0);
+        $sessionId = (int)($session_user_id ?? 0);
+        $commentsPayload = [];
+        foreach ($commentsData as $commentRow) {
+            $commentAuthorId = (int)($commentRow['user_id'] ?? 0);
+            $commentsPayload[] = [
+                'id' => (int)($commentRow['id'] ?? 0),
+                'comment' => (string)($commentRow['comment'] ?? ''),
+                'user_id' => $commentAuthorId,
+                'username' => (string)($commentRow['username'] ?? 'Unknown'),
+                'user_img' => !empty($commentRow['user_img']) ? '../images/' . (string)$commentRow['user_img'] : '../images/no_image.jpg',
+                'can_delete' => ($commentAuthorId === $sessionId) || ($creatorId === $sessionId),
+            ];
+        }
+
+        sendAjaxJson([
+            'success' => true,
+            'pin' => [
+                'id' => (int)$pinData['id'],
+                'image' => !empty($pinData['img']) ? '../images/' . (string)$pinData['img'] : '../images/no_image.jpg',
+                'title' => (string)($pinData['title'] ?? 'Pin'),
+                'creator_id' => $creatorId,
+                'creator_name' => (string)($pinData['creator_name'] ?? 'Unknown'),
+                'creator_img' => !empty($pinData['creator_img']) ? '../images/' . (string)$pinData['creator_img'] : '../images/no_image.jpg',
+                'like_count' => (int)($pinData['like_count'] ?? 0),
+                'user_liked' => !empty($pinData['user_liked']),
+            ],
+            'comments' => $commentsPayload,
+        ]);
+    } catch (PDOException $e) {
+        error_log('Error loading profile pin modal data: ' . $e->getMessage());
+        sendAjaxJson(['success' => false, 'message' => 'Database error while loading pin modal.']);
+    }
+}
+
 
 // Обработка удаления комментария
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
     $comment_id = filter_var($_POST['comment_id'], FILTER_SANITIZE_NUMBER_INT);
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
     $user_id = $_SESSION['user_id'];
+    $isAjax = (
+        (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_POST['ajax']) && $_POST['ajax'] === '1')
+        || (isset($_GET['ajax']) && $_GET['ajax'] === '1')
+    );
     error_log("Attempting to delete comment: user_id={$user_id}, comment_id={$comment_id}, pin_id={$pin_id}");
 
     try {
@@ -117,6 +250,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
 
         if (!$comment_data) {
             error_log("Comment or pin not found: comment_id={$comment_id}, pin_id={$pin_id}");
+            if ($isAjax) {
+                sendAjaxJson(['success' => false, 'message' => 'Comment not found.']);
+            }
             $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&error=commentnotfound&sort=" . urlencode($sort) . "#pinModal";
             header("Location: $redirect_url");
             exit();
@@ -125,6 +261,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
         // Проверяем, является ли пользователь автором комментария или владельцем пина
         if ($comment_data['user_id'] != $user_id && $comment_data['pin_owner_id'] != $user_id) {
             error_log("Unauthorized comment deletion attempt: user_id={$user_id}, comment_id={$comment_id}");
+            if ($isAjax) {
+                sendAjaxJson(['success' => false, 'message' => 'You are not allowed to delete this comment.']);
+            }
             $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&error=unauthorized&sort=" . urlencode($sort) . "#pinModal";
             header("Location: $redirect_url");
             exit();
@@ -136,16 +275,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
         $stmt->execute([$comment_id]);
         error_log("Comment deleted: comment_id={$comment_id}, user_id={$user_id}");
 
+        if ($isAjax) {
+            sendAjaxJson([
+                'success' => true,
+                'comment_id' => (int) $comment_id,
+                'pin_id' => (int) $pin_id,
+            ]);
+        }
+
         // Перенаправляем с сохранением состояния модала
         $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort) . "#pinModal";
         header("Location: $redirect_url");
         exit();
     } catch (PDOException $e) {
         error_log('Error deleting comment: ' . $e->getMessage());
+        if ($isAjax) {
+            sendAjaxJson(['success' => false, 'message' => 'Database error while deleting comment.']);
+        }
         $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&error=dberror&sort=" . urlencode($sort) . "#pinModal";
         header("Location: $redirect_url");
         exit();
     }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_report'])) {
+    if (!$session_user_id) {
+        header("Location: ../HTML/Login.php?error=notloggedin");
+        exit();
+    }
+
+    $reportTargetType = trim($_POST['report_target_type'] ?? '');
+    $reportTargetId = filter_var($_POST['report_target_id'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+    $pin_id = filter_var($_POST['pin_id'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+    $reportReason = trim($_POST['report_reason'] ?? '');
+    $reportCategory = trim($_POST['report_category'] ?? 'other');
+
+    if (!in_array($reportTargetType, ['pin', 'comment'], true)) {
+        $result = ['ok' => false, 'message' => 'Invalid report target.'];
+    } else {
+        $result = createContentReport($pdo, (int)$session_user_id, $reportTargetType, (int)$reportTargetId, $reportReason, $reportCategory);
+    }
+
+    $status = $result['ok'] ? 'ok' : 'error';
+    $redirect_url = "Profile.php?user_id=" . urlencode((string)$view_user_id) . "&pin_id=" . urlencode((string)$pin_id) . "&sort=" . urlencode($sort) . "&report_status=" . urlencode($status) . "&report_msg=" . urlencode($result['message']);
+    header("Location: $redirect_url#pinModal");
+    exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['follow_action'])) {
@@ -265,16 +439,93 @@ try {
 
 try {
     $query1 = "
-        SELECT c.collection_id, c.img, c.title, c.user_id, COUNT(p.id) as pin_count 
-        FROM collections c 
-        LEFT JOIN pins p ON c.collection_id = p.collection_id 
-        WHERE c.user_id = ? 
-        GROUP BY c.collection_id, c.img, c.title
+        SELECT c.collection_id,
+               c.img,
+               c.title,
+               c.user_id,
+               COUNT(DISTINCT p.id) AS pin_count,
+               CASE
+                   WHEN c.user_id = :view_user_id THEN 'owner'
+                   ELSE COALESCE(cc_view.role, 'viewer')
+               END AS access_role,
+               COALESCE(owner_user.username, 'Unknown') AS owner_username,
+               COALESCE(owner_user.img, '') AS owner_img
+        FROM collections c
+        LEFT JOIN pins p ON c.collection_id = p.collection_id
+        LEFT JOIN collection_collaborators cc_view
+               ON cc_view.collection_id = c.collection_id
+              AND cc_view.user_id = :view_user_id
+        LEFT JOIN registration owner_user ON owner_user.id = c.user_id
+        WHERE c.user_id = :view_user_id
+           OR cc_view.user_id = :view_user_id
+        GROUP BY c.collection_id, c.img, c.title, c.user_id, cc_view.role, owner_user.username, owner_user.img
+        ORDER BY c.collection_id DESC
     ";
     $stmt1 = $pdo->prepare($query1);
-    $stmt1->execute([$view_user_id]);
+    $stmt1->execute(['view_user_id' => (int) $view_user_id]);
     $collections = $stmt1->fetchAll(PDO::FETCH_ASSOC);
-    error_log("Collections fetched for user_id {$user_id}: " . count($collections));
+
+    $collectionIds = [];
+    foreach ($collections as $collectionRow) {
+        $collectionId = (int) ($collectionRow['collection_id'] ?? 0);
+        if ($collectionId > 0) {
+            $collectionIds[] = $collectionId;
+        }
+    }
+
+    $collectionCollaboratorsMap = [];
+    if (!empty($collectionIds)) {
+        $placeholders = implode(',', array_fill(0, count($collectionIds), '?'));
+        $collabQuery = "
+            SELECT cc.collection_id,
+                   cc.role,
+                   r.id AS user_id,
+                   r.username,
+                   r.img AS user_img
+            FROM collection_collaborators cc
+            INNER JOIN registration r ON r.id = cc.user_id
+            WHERE cc.collection_id IN ($placeholders)
+            ORDER BY cc.collection_id ASC,
+                     FIELD(cc.role, 'editor', 'viewer'),
+                     cc.created_at ASC,
+                     cc.user_id ASC
+        ";
+        $collabStmt = $pdo->prepare($collabQuery);
+        $collabStmt->execute($collectionIds);
+
+        foreach ($collabStmt->fetchAll(PDO::FETCH_ASSOC) as $collabRow) {
+            $mapCollectionId = (int) ($collabRow['collection_id'] ?? 0);
+            if ($mapCollectionId <= 0) {
+                continue;
+            }
+
+            if (!isset($collectionCollaboratorsMap[$mapCollectionId])) {
+                $collectionCollaboratorsMap[$mapCollectionId] = [];
+            }
+
+            $collectionCollaboratorsMap[$mapCollectionId][] = [
+                'user_id' => (int) ($collabRow['user_id'] ?? 0),
+                'username' => (string) ($collabRow['username'] ?? 'Unknown'),
+                'role' => normalizeCollectionRole((string) ($collabRow['role'] ?? 'viewer')),
+                'user_img' => !empty($collabRow['user_img']) ? '../images/' . (string) $collabRow['user_img'] : '../images/no_image.jpg',
+            ];
+        }
+    }
+
+    foreach ($collections as &$collectionRow) {
+        $currentCollectionId = (int) ($collectionRow['collection_id'] ?? 0);
+        $ownerImage = !empty($collectionRow['owner_img']) ? '../images/' . (string) $collectionRow['owner_img'] : '../images/no_image.jpg';
+
+        $collectionRow['owner'] = [
+            'user_id' => (int) ($collectionRow['user_id'] ?? 0),
+            'username' => (string) ($collectionRow['owner_username'] ?? 'Unknown'),
+            'user_img' => $ownerImage,
+        ];
+        $collectionRow['collaborators'] = $collectionCollaboratorsMap[$currentCollectionId] ?? [];
+    }
+    unset($collectionRow);
+
+    error_log("Collections fetched for user_id {$view_user_id}: " . count($collections));
 } catch (PDOException $e) {
     error_log('Error fetching collections: ' . $e->getMessage());
     $collections = [];
@@ -308,14 +559,8 @@ try {
 
 // Ensure outfits table exists and fetch outfits for this profile
 try {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS outfits (
-        id          INT AUTO_INCREMENT PRIMARY KEY,
-        user_id     INT NOT NULL,
-        name        VARCHAR(255) NOT NULL,
-        img         VARCHAR(255) NOT NULL,
-        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
-    $stmt = $pdo->prepare("SELECT id, name, img, created_at FROM outfits WHERE user_id = ? ORDER BY created_at DESC");
+    ensureOutfitsTable($pdo);
+    $stmt = $pdo->prepare("SELECT id, name, img, created_at, updated_at FROM outfits WHERE user_id = ? ORDER BY COALESCE(updated_at, created_at) DESC, id DESC");
     $stmt->execute([$view_user_id]);
     $outfits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -328,22 +573,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         header("Location: ../HTML/Login.php?error=notloggedin");
         exit();
     }
-    if ($view_user_id !== $session_user_id) {
+    if ((int) $view_user_id !== (int) $session_user_id) {
         header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=unauthorized&sort=" . urlencode($sort));
         exit();
     }
-    $new_username = filter_var($_POST['username'], FILTER_SANITIZE_STRING);
-    $new_description = filter_var($_POST['description'], FILTER_SANITIZE_STRING);
+    $new_username = trim((string) ($_POST['username'] ?? ''));
+    $new_description = trim((string) ($_POST['description'] ?? ''));
+
+    if ($new_username === '') {
+        header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&error=emptyusername&sort=" . urlencode($sort));
+        exit();
+    }
+
+    if (mb_strlen($new_username) > 50) {
+        header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&error=usernametoolong&sort=" . urlencode($sort));
+        exit();
+    }
+
+    if (mb_strlen($new_description) > 500) {
+        $new_description = mb_substr($new_description, 0, 500);
+    }
 
     try {
+        $checkQuery = "SELECT id FROM registration WHERE username = ? AND id != ? LIMIT 1";
+        $checkStmt = $pdo->prepare($checkQuery);
+        $checkStmt->execute([$new_username, (int) $session_user_id]);
+        if ($checkStmt->fetch(PDO::FETCH_ASSOC)) {
+            header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&error=usernametaken&sort=" . urlencode($sort));
+            exit();
+        }
+
         $query = "UPDATE registration SET username = ?, description = ? WHERE id = ?";
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$new_username, $new_description, $session_user_id]);
+        $stmt->execute([$new_username, $new_description, (int) $session_user_id]);
+        $_SESSION['username'] = $new_username;
         error_log("Profile updated for user_id {$session_user_id}: username={$new_username}");
-        header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&sort=" . urlencode($sort));
+        header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&sort=" . urlencode($sort) . "&status=profileupdated");
         exit();
     } catch (PDOException $e) {
         error_log('Error updating profile: ' . $e->getMessage());
+        header("Location: Profile.php?user_id=" . urlencode($session_user_id) . "&error=dberror&sort=" . urlencode($sort));
+        exit();
     }
 }
 
@@ -353,44 +623,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
         exit();
     }
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
+    $isAjax = (
+        (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_POST['ajax']) && $_POST['ajax'] === '1')
+        || (isset($_GET['ajax']) && $_GET['ajax'] === '1')
+    );
     error_log("Attempting to toggle like: user_id={$session_user_id}, pin_id={$pin_id}");
 
     try {
-        $query = "SELECT id FROM pins WHERE id = ?";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$pin_id]);
-        $pin_exists = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$pin_exists) {
+        if (!pinExists($pdo, (int) $pin_id)) {
             error_log("Pin does not exist: pin_id={$pin_id}");
+            if ($isAjax) {
+                sendAjaxJson(['success' => false, 'message' => 'Pin not found.']);
+            }
             header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=pinnotfound&sort=" . urlencode($sort));
             exit();
         }
 
-        $query = "SELECT * FROM likes WHERE user_id = ? AND pin_id = ?";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$session_user_id, $pin_id]);
-        $like = $stmt->fetch(PDO::FETCH_ASSOC);
+        $likeData = togglePinLike($pdo, (int) $session_user_id, (int) $pin_id);
 
-        if ($like) {
-            $query = "DELETE FROM likes WHERE user_id = ? AND pin_id = ?";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([$session_user_id, $pin_id]);
-            error_log("Like removed: user_id={$session_user_id}, pin_id={$pin_id}");
-
-            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
-            if ($pin_owner_id) {
-                removeNotification($pdo, $pin_owner_id, $session_user_id, 'like', $pin_id);
-            }
-        } else {
-            $query = "INSERT INTO likes (user_id, pin_id, date) VALUES (?, ?, NOW())";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([$session_user_id, $pin_id]);
-            error_log("Like added: user_id={$session_user_id}, pin_id={$pin_id}");
-
-            $pin_owner_id = getPinOwnerId($pdo, $pin_id);
-            if ($pin_owner_id) {
-                addNotification($pdo, $pin_owner_id, $session_user_id, 'like', $pin_id);
-            }
+        if ($isAjax) {
+            sendAjaxJson([
+                'success' => true,
+                'like' => $likeData,
+            ]);
         }
 
         $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
@@ -398,6 +654,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
         exit();
     } catch (PDOException $e) {
         error_log('Error toggling like: ' . $e->getMessage());
+        if ($isAjax) {
+            sendAjaxJson(['success' => false, 'message' => 'Database error.']);
+        }
         header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=dberror&sort=" . urlencode($sort) . "#pinModal");
         exit();
     }
@@ -409,7 +668,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
         exit();
     }
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
-    $comment = trim($_POST['comment']);
+    $comment = trim(strip_tags((string)($_POST['comment'] ?? '')));
+    $isAjax = (
+        (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_POST['ajax']) && $_POST['ajax'] === '1')
+        || (isset($_GET['ajax']) && $_GET['ajax'] === '1')
+    );
+
+    if ($comment === '') {
+        if ($isAjax) {
+            sendAjaxJson(['success' => false, 'message' => 'Comment cannot be empty.']);
+        }
+        $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&error=emptycomment&sort=" . urlencode($sort);
+        header("Location: $redirect_url#pinModal");
+        exit();
+    }
 
     try {
         $query = "SELECT id FROM pins WHERE id = ?";
@@ -418,6 +691,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
         $pin_exists = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$pin_exists) {
             error_log("Pin does not exist: pin_id={$pin_id}");
+            if ($isAjax) {
+                sendAjaxJson(['success' => false, 'message' => 'Pin not found.']);
+            }
             header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=pinnotfound&sort=" . urlencode($sort));
             exit();
         }
@@ -425,6 +701,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
         $query = "INSERT INTO comments (pin_id, user_id, comment, created_at) VALUES (?, ?, ?, NOW())";
         $stmt = $pdo->prepare($query);
         $stmt->execute([$pin_id, $user_id, $comment]);
+        $new_comment_id = (int)$pdo->lastInsertId();
         error_log("Comment added: user_id={$user_id}, pin_id={$pin_id}, comment={$comment}");
 
         $pin_owner_id = getPinOwnerId($pdo, $pin_id);
@@ -432,11 +709,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
             addNotification($pdo, $pin_owner_id, $user_id, 'comment', $pin_id);
         }
 
+        if ($isAjax) {
+            sendAjaxJson([
+                'success' => true,
+                'comment' => [
+                    'id' => $new_comment_id,
+                    'username' => $current_user_name,
+                    'user_img' => $current_user_image,
+                    'comment' => $comment,
+                    'pin_id' => (int)$pin_id,
+                ],
+            ]);
+        }
+
         $redirect_url = "Profile.php?user_id=" . urlencode($view_user_id) . "&pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
         header("Location: $redirect_url#pinModal");
         exit();
     } catch (PDOException $e) {
         error_log('Error adding comment: ' . $e->getMessage());
+        if ($isAjax) {
+            sendAjaxJson(['success' => false, 'message' => 'Database error while adding comment.']);
+        }
         header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=dberror&sort=" . urlencode($sort) . "#pinModal");
         exit();
     }
@@ -474,7 +767,7 @@ if (isset($_GET['pin_id'])) {
     }
 
     $query = "
-        SELECT c.comment, c.created_at, r.username, r.img as user_img
+        SELECT c.id, c.comment, c.created_at, c.user_id, r.username, r.img as user_img
         FROM comments c
         JOIN registration r ON c.user_id = r.id
         WHERE c.pin_id = ?

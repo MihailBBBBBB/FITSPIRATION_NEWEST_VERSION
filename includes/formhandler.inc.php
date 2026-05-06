@@ -1,13 +1,27 @@
 <?php
 session_start(); 
+require_once 'csrf.inc.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST["email"];
-    $password = $_POST["password"];
-    $birthdate = $_POST["birthdate"];
+    requireValidCsrfToken();
+    $email = trim($_POST["email"] ?? '');
+    $password = $_POST["password"] ?? '';
+    $birthdate = $_POST["birthdate"] ?? '';
+
+    if ($email === '' || $password === '' || $birthdate === '') {
+        $_SESSION['form_data'] = [
+            'email' => $email,
+            'birthdate' => $birthdate
+        ];
+        $_SESSION['registration_error'] = "All fields are required.";
+        header("Location: ../HTML/Registration.php?error=missingfields");
+        exit();
+    }
 
     try {
         require_once "dbh.inc.php";
+        require_once "auth_password.inc.php";
+        ensurePasswordStorageCapacity($pdo);
 
         // Check if email exists
         $checkQuery = "SELECT email FROM registration WHERE email = ?";
@@ -27,21 +41,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Generate random username
         $username = generateUniqueUsername($pdo);
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+        if ($passwordHash === false) {
+            throw new RuntimeException('Unable to hash password.');
+        }
 
         // Insert user with username into database
         $query = "INSERT INTO registration (email, password, birthdate, username) VALUES (?, ?, ?, ?);";
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$email, $password, $birthdate, $username]);
+        $stmt->execute([$email, $passwordHash, $birthdate, $username]);
 
         $user_id = $pdo->lastInsertId();
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user_id;
+        $_SESSION['user_email'] = $email;
         $_SESSION['username'] = $username; // Store username in session
 
         header("Location: ../HTML/Home.php");
         exit(); 
 
     } catch (PDOException $e) {
-        die("Query failed: " . $e->getMessage());
+        error_log("Registration failed: " . $e->getMessage());
+        $_SESSION['form_data'] = [
+            'email' => $email,
+            'birthdate' => $birthdate
+        ];
+        $_SESSION['registration_error'] = "Registration failed. Please try again.";
+        header("Location: ../HTML/Registration.php?error=servererror");
+        exit();
+    } catch (RuntimeException $e) {
+        error_log("Registration failed: " . $e->getMessage());
+        $_SESSION['form_data'] = [
+            'email' => $email,
+            'birthdate' => $birthdate
+        ];
+        $_SESSION['registration_error'] = "Registration failed. Please try again.";
+        header("Location: ../HTML/Registration.php?error=servererror");
+        exit();
     }
 } else {
     header("Location: ../HTML/Registration.php");
@@ -67,4 +104,6 @@ function generateUniqueUsername($pdo) {
             return $username; // Username is unique
         }
     }
+
+    throw new RuntimeException('Unable to generate a unique username.');
 }

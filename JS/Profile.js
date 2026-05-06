@@ -1,62 +1,283 @@
-function openPinModal(imageSrc, title, pinId, likeCount, userLiked) {
+function fitPinModalToImageSize() {
+    const modal = document.getElementById('pinModal');
+    const modalLayout = modal ? modal.querySelector('.modal-layout') : null;
+    const imagePane = modal ? modal.querySelector('.modal-image') : null;
+    const detailsPane = modal ? modal.querySelector('.modal-details') : null;
+    const image = document.getElementById('modalPinImage');
+    const minDesktopModalHeight = 320;
+    const minHeightForImageLockedLayout = 420;
+
+    if (!modal || !image) {
+        return;
+    }
+
+    const clearSizing = () => {
+        if (modalLayout) {
+            modalLayout.style.removeProperty('height');
+            modalLayout.style.removeProperty('max-height');
+        }
+        if (imagePane) {
+            imagePane.style.removeProperty('width');
+            imagePane.style.removeProperty('height');
+            imagePane.style.removeProperty('min-height');
+        }
+        if (detailsPane) {
+            detailsPane.style.removeProperty('height');
+            detailsPane.style.removeProperty('max-height');
+        }
+        modal.style.removeProperty('height');
+        modal.style.removeProperty('max-height');
+        modal.style.removeProperty('--pin-image-ratio');
+    };
+
+    if (window.innerWidth <= 900) {
+        clearSizing();
+        return;
+    }
+
+    const applyRenderedHeight = () => {
+        const renderedHeight = Math.round(image.getBoundingClientRect().height || 0);
+        const renderedWidth = Math.round(image.getBoundingClientRect().width || 0);
+        if (renderedHeight <= 0 || renderedWidth <= 0) {
+            return;
+        }
+
+        if (renderedHeight < minHeightForImageLockedLayout) {
+            clearSizing();
+            return;
+        }
+
+        const maxDesktopModalHeight = Math.floor(window.innerHeight * 0.86);
+        const targetHeight = Math.min(maxDesktopModalHeight, Math.max(renderedHeight, minDesktopModalHeight));
+
+        if (modalLayout) {
+            modalLayout.style.height = `${targetHeight}px`;
+            modalLayout.style.maxHeight = `${targetHeight}px`;
+        }
+        if (imagePane) {
+            imagePane.style.minHeight = `${targetHeight}px`;
+        }
+        if (detailsPane) {
+            detailsPane.style.height = `${targetHeight}px`;
+            detailsPane.style.maxHeight = `${targetHeight}px`;
+        }
+        modal.style.setProperty('--pin-image-ratio', (renderedWidth / renderedHeight).toFixed(4));
+    };
+
+    clearSizing();
+
+    if (image.complete && image.naturalWidth > 0) {
+        requestAnimationFrame(applyRenderedHeight);
+    } else {
+        image.addEventListener('load', () => requestAnimationFrame(applyRenderedHeight), { once: true });
+    }
+}
+
+function populatePinModal(pinElement) {
+    if (!pinElement) return;
+
+    const imageSrc = pinElement.querySelector('.pin-image')?.dataset.image || pinElement.dataset.image || '../images/no_image.jpg';
+    const title = pinElement.querySelector('.pin-title')?.textContent || pinElement.dataset.title || 'Pin';
+    const pinId = pinElement.dataset.pinId || '';
+    const imageElement = pinElement.querySelector('.pin-image');
+    const likeCount = Number(imageElement?.dataset.likeCount || pinElement.dataset.likeCount || 0);
+    const userLiked = (imageElement?.dataset.userLiked === '1') || (pinElement.dataset.userLiked === '1');
+    const creatorId = imageElement?.dataset.creatorId || pinElement.dataset.creatorId || '';
+    const creatorName = imageElement?.dataset.creatorName || pinElement.dataset.creatorName || 'Unknown';
+    const creatorImg = imageElement?.dataset.creatorImg || pinElement.dataset.creatorImg || '../images/no_image.jpg';
+
     const modalPinImage = document.getElementById('modalPinImage');
     const modalPinTitle = document.getElementById('modalPinTitle');
     const modalLikeButton = document.getElementById('modalLikeButton');
     const modalLikeCount = document.getElementById('modalLikeCount');
-    const modalCommentList = document.getElementById('modalCommentList');
+    const modalCreatorLink = document.getElementById('modalCreatorLink');
+    const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
 
-    if (!modalPinImage || !modalPinTitle || !modalLikeButton || !modalLikeCount || !modalCommentList) {
-        console.error('One or more modal elements are missing:', {
-            modalPinImage: !!modalPinImage,
-            modalPinTitle: !!modalPinTitle,
-            modalLikeButton: !!modalLikeButton,
-            modalLikeCount: !!modalLikeCount,
-            modalCommentList: !!modalCommentList
-        });
+    if (modalPinImage) {
+        modalPinImage.src = imageSrc;
+    }
+    if (modalPinTitle) modalPinTitle.textContent = title;
+    if (modalLikeButton) {
+        modalLikeButton.dataset.pinId = pinId;
+        modalLikeButton.classList.toggle('liked', userLiked);
+    }
+    if (modalLikeCount) modalLikeCount.textContent = likeCount;
+    if (modalCreatorAvatar) modalCreatorAvatar.src = creatorImg;
+
+    if (modalCreatorLink) {
+        if (creatorId) {
+            modalCreatorLink.href = 'Profile.php?user_id=' + encodeURIComponent(creatorId);
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'auto';
+            modalCreatorLink.style.color = '#1d4ed8';
+        } else {
+            modalCreatorLink.href = '#';
+            modalCreatorLink.textContent = creatorName;
+            modalCreatorLink.style.pointerEvents = 'none';
+            modalCreatorLink.style.color = '#6b7280';
+        }
+    }
+
+    const pinIdInputs = document.querySelectorAll('#pinModal input[name="pin_id"]');
+    pinIdInputs.forEach(input => input.value = pinId);
+
+    const modal = document.getElementById('pinModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        fitPinModalToImageSize();
+    }
+}
+
+function renderModalComments(comments, pinId) {
+    const modalCommentList = document.getElementById('modalCommentList');
+    if (!modalCommentList) return;
+
+    modalCommentList.innerHTML = '';
+
+    if (!Array.isArray(comments) || comments.length === 0) {
+        const emptyRow = document.createElement('li');
+        emptyRow.textContent = 'No comments yet.';
+        modalCommentList.appendChild(emptyRow);
         return;
     }
 
-    modalPinImage.src = imageSrc;
-    modalPinImage.alt = title;
-    modalPinTitle.textContent = title;
-    modalLikeButton.setAttribute('data-pin-id', pinId);
-    modalLikeCount.textContent = likeCount;
-    modalLikeButton.classList.toggle('liked', userLiked);
-
-    const forms = document.querySelectorAll('#pinModal form input[name="pin_id"]');
-    forms.forEach(formInput => {
-        formInput.value = pinId;
-    });
-
-    if (!pinData[pinId]) {
-        pinData[pinId] = { likes: likeCount, comments: [] };
-    }
-
-    modalCommentList.innerHTML = '';
-    pinData[pinId].comments.forEach(comment => {
+    comments.forEach(comment => {
         const li = document.createElement('li');
-        li.textContent = comment;
+        const commentId = String(comment.id || '0');
+        const userImg = escapeHtml(comment.user_img || '../images/no_image.jpg');
+        const username = escapeHtml(comment.username || 'Unknown');
+        const commentText = escapeHtml(comment.comment || '');
+        const deleteButton = comment.can_delete
+            ? `<button type="button" class="comment-delete-btn" data-comment-id="${commentId}" data-pin-id="${escapeHtml(String(pinId))}" onclick="deleteComment(${commentId}, '${escapeHtml(String(pinId))}')">Delete</button>`
+            : '';
+
+        li.innerHTML = `
+            <img src="${userImg}" alt="User">
+            ${username}: ${commentText}
+            ${deleteButton}
+        `;
         modalCommentList.appendChild(li);
     });
+}
 
-    const currentSearch = window.location.search || '';
-    const newSearch = currentSearch.includes('pin_id=') 
-        ? currentSearch.replace(/pin_id=\d+/, `pin_id=${pinId}`)
-        : `${currentSearch}${currentSearch ? '&' : '?'}pin_id=${pinId}`;
-    window.location.href = `Profile.php${newSearch}#pinModal`;
+function applyFetchedPinData(pinData, comments) {
+    if (!pinData || !pinData.id) return;
+
+    const pinId = String(pinData.id);
+    const modalPinImage = document.getElementById('modalPinImage');
+    const modalPinTitle = document.getElementById('modalPinTitle');
+    const modalLikeButton = document.getElementById('modalLikeButton');
+    const modalLikeCount = document.getElementById('modalLikeCount');
+    const modalCreatorLink = document.getElementById('modalCreatorLink');
+    const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
+    const reportButton = document.querySelector('#pinModal .report-flag-btn');
+    const reportPinIdInput = document.getElementById('reportPinId');
+
+    if (modalPinImage) {
+        modalPinImage.src = pinData.image || '../images/no_image.jpg';
+        fitPinModalToImageSize();
+    }
+    if (modalPinTitle) modalPinTitle.textContent = pinData.title || 'Pin';
+    if (modalLikeButton) {
+        modalLikeButton.dataset.pinId = pinId;
+        modalLikeButton.classList.toggle('liked', !!pinData.user_liked);
+    }
+    if (modalLikeCount) modalLikeCount.textContent = Number(pinData.like_count || 0);
+    if (modalCreatorAvatar) modalCreatorAvatar.src = pinData.creator_img || '../images/no_image.jpg';
+
+    if (modalCreatorLink) {
+        if (pinData.creator_id) {
+            modalCreatorLink.href = 'Profile.php?user_id=' + encodeURIComponent(String(pinData.creator_id));
+            modalCreatorLink.textContent = pinData.creator_name || 'Unknown';
+            modalCreatorLink.style.pointerEvents = 'auto';
+            modalCreatorLink.style.color = '#1d4ed8';
+        } else {
+            modalCreatorLink.href = '#';
+            modalCreatorLink.textContent = pinData.creator_name || 'Unknown';
+            modalCreatorLink.style.pointerEvents = 'none';
+            modalCreatorLink.style.color = '#6b7280';
+        }
+    }
+
+    document.querySelectorAll('#pinModal input[name="pin_id"]').forEach(input => input.value = pinId);
+
+    if (reportButton) {
+        reportButton.setAttribute('onclick', `openReportModal('pin', '${pinId}', '${pinId}')`);
+    }
+    if (reportPinIdInput) {
+        reportPinIdInput.value = pinId;
+    }
+
+    renderModalComments(comments, pinId);
+}
+
+async function fetchPinModalData(pinId) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('ajax', '1');
+    url.searchParams.set('action', 'get_pin_modal');
+    url.searchParams.set('pin_id', String(pinId));
+
+    const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Could not load pin data');
+    }
+
+    const data = await response.json();
+    if (!data || !data.success) {
+        throw new Error(data?.message || 'Could not load pin data');
+    }
+
+    return data;
+}
+
+async function openPinModal(pinId, pinElement) {
+    if (!pinId) return;
+
+    if (pinElement) {
+        populatePinModal(pinElement);
+    } else {
+        const modal = document.getElementById('pinModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    try {
+        const data = await fetchPinModalData(pinId);
+        applyFetchedPinData(data.pin, data.comments || []);
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('pin_id', String(pinId));
+        url.hash = 'pinModal';
+        window.history.replaceState({}, document.title, url.toString());
+    } catch (error) {
+        console.error('Error opening pin modal:', error);
+    }
 }
 
 function closePinModal() {
     const modal = document.getElementById('pinModal');
     if (modal) {
         modal.style.display = 'none';
-        document.getElementById('modalCommentInput').value = '';
         const url = new URL(window.location);
         url.searchParams.delete('pin_id');
         url.hash = '';
         window.history.replaceState({}, document.title, url);
     }
 }
+
+window.addEventListener('resize', () => {
+    const modal = document.getElementById('pinModal');
+    if (modal && modal.style.display === 'flex') {
+        fitPinModalToImageSize();
+    }
+});
 
 function applySort(sortValue) {
     const currentUrl = new URL(window.location);
@@ -93,7 +314,6 @@ function closeAvatarModal() {
 }
 
 function showCreateModal() {
-    console.log('showCreateModal called');
     const modal = document.getElementById('createModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -101,70 +321,241 @@ function showCreateModal() {
 }
 
 function closeCreateModal() {
-    console.log('closeCreateModal called');
     const modal = document.getElementById('createModal');
     if (modal) {
         modal.style.display = 'none';
     }
 }
 
-const pinData = {};
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-function addComment() {
-    console.log('addComment called');
-    const pinId = document.getElementById('modalLikeButton').getAttribute('data-pin-id');
-    const commentInput = document.getElementById('modalCommentInput');
-    const commentText = commentInput.value.trim();
-
-    if (commentText) {
-        pinData[pinId].comments.push(commentText);
-        const commentList = document.getElementById('modalCommentList');
-        const li = document.createElement('li');
-        li.textContent = commentText;
-        commentList.appendChild(li);
-
-        const commentCountSpan = document.querySelector(`.comment-count[data-pin-id="${pinId}"] span`);
-        if (commentCountSpan) {
-            commentCountSpan.textContent = pinData[pinId].comments.length;
-        }
-
-        commentInput.value = '';
+function appendCommentToModal(commentData) {
+    const modalCommentList = document.getElementById('modalCommentList');
+    if (!modalCommentList) {
+        return;
     }
+
+    if (modalCommentList.children.length === 1 && modalCommentList.children[0].textContent.trim() === 'No comments yet.') {
+        modalCommentList.innerHTML = '';
+    }
+
+    const li = document.createElement('li');
+    const pinId = String(commentData.pin_id || '');
+    const commentId = String(commentData.id || '0');
+    li.innerHTML = `
+        <img src="${escapeHtml(commentData.user_img || '../images/no_image.jpg')}" alt="User">
+        ${escapeHtml(commentData.username || 'You')}: ${escapeHtml(commentData.comment || '')}
+        <button type="button" class="comment-delete-btn"
+            data-comment-id="${escapeHtml(commentId)}"
+            data-pin-id="${escapeHtml(pinId)}"
+            onclick="deleteComment(${escapeHtml(commentId)}, '${escapeHtml(pinId)}')">Delete</button>
+    `;
+    modalCommentList.prepend(li);
+
+    document.querySelectorAll('.comment-count[data-pin-id="' + CSS.escape(pinId) + '"]').forEach(commentCount => {
+        const badge = commentCount.querySelector('span:last-child');
+        if (!badge) return;
+        const currentCount = Number(badge.textContent || '0');
+        badge.textContent = currentCount + 1;
+    });
+}
+
+function openReportModal(targetType, targetId, pinId) {
+    const reportModal = document.getElementById('reportModal');
+    const targetTypeInput = document.getElementById('reportTargetType');
+    const targetIdInput = document.getElementById('reportTargetId');
+    const pinIdInput = document.getElementById('reportPinId');
+    const subtitle = document.getElementById('reportModalSubtitle');
+
+    if (!reportModal || !targetTypeInput || !targetIdInput || !pinIdInput) {
+        return;
+    }
+
+    targetTypeInput.value = targetType;
+    targetIdInput.value = targetId;
+    pinIdInput.value = pinId;
+
+    if (subtitle) {
+        subtitle.textContent = targetType === 'comment'
+            ? 'Reporting this comment. Tell us what happened.'
+            : 'Reporting this pin. Tell us what happened.';
+    }
+
+    reportModal.style.display = 'flex';
+    reportModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeReportModal() {
+    const reportModal = document.getElementById('reportModal');
+    if (reportModal) {
+        reportModal.style.display = 'none';
+        reportModal.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function deleteComment(commentId, pinId) {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    const deleteButton = document.querySelector('.comment-delete-btn[data-comment-id="' + CSS.escape(String(commentId)) + '"]');
+    const commentRow = deleteButton ? deleteButton.closest('li') : null;
+    const modalCommentList = document.getElementById('modalCommentList');
+
+    const formData = new FormData();
+    formData.append('delete_comment', '1');
+    formData.append('comment_id', commentId);
+    formData.append('pin_id', pinId);
+    formData.append('ajax', '1');
+    if (typeof appendCsrfToken === 'function') {
+        appendCsrfToken(formData);
+    }
+
+    const url = new URL(window.location);
+    url.searchParams.set('pin_id', pinId);
+
+    fetch(url.toString(), {
+        method: 'POST',
+        headers: typeof getCsrfHeaders === 'function' ? getCsrfHeaders({
+            'X-Requested-With': 'XMLHttpRequest'
+        }) : {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+        .then(async response => {
+            if (!response.ok) {
+                throw new Error('Delete request failed');
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message || 'Server reported an error while deleting');
+                }
+                return data;
+            }
+
+            const redirectedUrl = response.url || '';
+            if (redirectedUrl.includes('error=')) {
+                throw new Error('Server reported an error while deleting');
+            }
+
+            await response.text();
+            return { success: true };
+        })
+        .then(() => {
+            if (commentRow) {
+                commentRow.remove();
+            }
+
+            document.querySelectorAll('.comment-count[data-pin-id="' + CSS.escape(String(pinId)) + '"]').forEach(commentCount => {
+                const badge = commentCount.querySelector('span:last-child');
+                if (!badge) return;
+                const currentCount = Number(badge.textContent || '0');
+                badge.textContent = Math.max(0, currentCount - 1);
+            });
+
+            if (modalCommentList && modalCommentList.children.length === 0) {
+                const emptyRow = document.createElement('li');
+                emptyRow.textContent = 'No comments yet.';
+                modalCommentList.appendChild(emptyRow);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting comment:', error);
+            alert('Could not delete comment. Please try again.');
+        });
 }
 
 let pinIdToDelete = null;
 let collectionIdToDelete = null;
 
 function openDeleteModal(type, id, event) {
-    console.log('openDeleteModal started:', { type, id });
     if (event) {
         event.stopPropagation();
         event.preventDefault();
     }
 
     if (type !== 'pin') {
-        console.error('Invalid delete type:', type);
-        alert('Error: Invalid delete type');
         return;
     }
 
     pinIdToDelete = id;
     const modal = document.getElementById('deleteModal');
     if (!modal) {
-        console.error('deleteModal not found in DOM');
-        alert('Error: deleteModal not found');
         return;
     }
 
     modal.style.display = 'flex';
-    document.getElementById('deleteModalTitle').textContent = `Delete ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-    document.getElementById('deleteModalText').textContent = `Do you really want to delete this ${type}? This action cannot be undone.`;
-    document.querySelector('.delete-modal-confirm').setAttribute('data-type', type);
-    document.querySelector('.delete-modal-confirm').setAttribute('data-id', id);
+    document.getElementById('deleteModalTitle').textContent = 'Delete Pin';
+    document.getElementById('deleteModalText').textContent = 'Do you really want to delete this pin? This action cannot be undone.';
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    pinIdToDelete = null;
+}
+
+function confirmDelete() {
+    if (!pinIdToDelete) {
+        return;
+    }
+
+    const deletedPinId = pinIdToDelete;
+    const selector = '.pin-item[data-pin-id="' + CSS.escape(String(deletedPinId)) + '"]';
+    const requestBody = new URLSearchParams({
+        pin_id: String(deletedPinId)
+    });
+    if (typeof getCsrfToken === 'function') {
+        const csrfToken = getCsrfToken();
+        if (csrfToken) {
+            requestBody.set('csrf_token', csrfToken);
+        }
+    }
+
+    fetch('../includes/deletePin.inc.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: requestBody.toString()
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.error || 'Unknown error');
+            }
+
+            const element = document.querySelector(selector);
+            if (element) {
+                element.remove();
+            }
+
+            closeDeleteModal();
+
+            const url = new URL(window.location);
+            if (url.searchParams.get('pin_id') === String(deletedPinId)) {
+                closePinModal();
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting pin:', error);
+            alert('Error deleting pin. Please try again.');
+        });
 }
 
 function openDeleteCollectionModal(id, event) {
-    console.log('openDeleteCollectionModal started:', { id });
     if (event) {
         event.stopPropagation();
         event.preventDefault();
@@ -173,28 +564,15 @@ function openDeleteCollectionModal(id, event) {
     collectionIdToDelete = id;
     const modal = document.getElementById('deleteCollectionModal');
     if (!modal) {
-        console.error('deleteCollectionModal not found in DOM');
-        alert('Error: deleteCollectionModal not found');
         return;
     }
 
     modal.style.display = 'flex';
-    document.querySelector('.delete-modal-confirm').setAttribute('data-collection-id', id);
     document.getElementById('deleteCollectionModalTitle').textContent = 'Delete Collection';
     document.getElementById('deleteCollectionModalText').textContent = 'Do you really want to delete this collection? This action cannot be undone.';
 }
 
-function closeDeleteModal() {
-    console.log('closeDeleteModal called');
-    const modal = document.getElementById('deleteModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    pinIdToDelete = null;
-}
-
 function closeDeleteCollectionModal() {
-    console.log('closeDeleteCollectionModal called');
     const modal = document.getElementById('deleteCollectionModal');
     if (modal) {
         modal.style.display = 'none';
@@ -202,115 +580,74 @@ function closeDeleteCollectionModal() {
     collectionIdToDelete = null;
 }
 
-function confirmDelete() {
-    console.log('confirmDelete called:', { pinIdToDelete });
-    if (!pinIdToDelete) {
-        console.error('No pin ID to delete');
-        alert('Error: No pin ID to delete');
-        return;
-    }
-
-    const url = '../includes/deletePin.inc.php';
-    const data = 'pin_id=' + encodeURIComponent(pinIdToDelete);
-    const selector = `.pin-item[data-pin-id="${pinIdToDelete}"]`;
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: data
-    })
-    .then(response => {
-        console.log('Fetch response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Fetch response data:', data);
-        if (data.success) {
-            const element = document.querySelector(selector);
-            if (element) {
-                element.remove();
-                closeDeleteModal();
-            } else {
-                console.error('Element not found for selector:', selector);
-                alert('Error: Element not found in DOM');
-            }
-        } else {
-            alert('Error deleting pin: ' + (data.error || 'Unknown error'));
-        }
-    });
-}
-
 function confirmDeleteCollection() {
-    console.log('confirmDeleteCollection called:', { collectionIdToDelete });
     if (!collectionIdToDelete) {
-        console.error('No collection ID to delete');
-        alert('Error: No collection ID to delete');
         return;
     }
 
-    const url = '../includes/deleteCollection.inc.php';
-    const data = 'collection_id=' + encodeURIComponent(collectionIdToDelete);
-    const selector = `.pin-item[data-collection-id="${collectionIdToDelete}"]`;
+    const deletedCollectionId = collectionIdToDelete;
+    const selector = '.pin-item[data-collection-id="' + CSS.escape(String(deletedCollectionId)) + '"]';
+    const requestBody = new URLSearchParams({
+        collection_id: String(deletedCollectionId)
+    });
+    if (typeof getCsrfToken === 'function') {
+        const csrfToken = getCsrfToken();
+        if (csrfToken) {
+            requestBody.set('csrf_token', csrfToken);
+        }
+    }
 
-    fetch(url, {
+    fetch('../includes/deleteCollection.inc.php', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: data
+        body: requestBody.toString()
     })
-    .then(response => {
-        console.log('Fetch response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Fetch response data:', data);
-        if (data.success) {
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.error || 'Unknown error');
+            }
+
             const element = document.querySelector(selector);
             if (element) {
                 element.remove();
-                closeDeleteCollectionModal();
-            } else {
-                console.error('Element not found for selector:', selector);
-                alert('Error: Element not found in DOM');
             }
-        } else {
-            alert('Error deleting collection: ' + (data.error || 'Unknown error'));
-        }
-    });
+
+            closeDeleteCollectionModal();
+        })
+        .catch(error => {
+            console.error('Error deleting collection:', error);
+            alert('Error deleting collection. Please try again.');
+        });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, initializing modals');
-    const deleteModal = document.getElementById('deleteModal');
-    const deleteCollectionModal = document.getElementById('deleteCollectionModal');
-    const createModal = document.getElementById('createModal');
-    const pinModal = document.getElementById('pinModal');
-    const editModal = document.getElementById('editModal');
-    const avatarModal = document.getElementById('avatarModal');
+    const pinModalRoot = document.getElementById('pinModal');
+    if (pinModalRoot && pinModalRoot.parentElement !== document.body) {
+        document.body.appendChild(pinModalRoot);
+    }
 
-    if (deleteModal) {
-        deleteModal.style.display = 'none';
-        console.log('deleteModal found and hidden');
-    } else {
-        console.error('deleteModal not found in DOM');
-    }
-    if (deleteCollectionModal) {
-        deleteCollectionModal.style.display = 'none';
-        console.log('deleteCollectionModal found and hidden');
-    } else {
-        console.error('deleteCollectionModal not found in DOM');
-    }
-    if (createModal) createModal.style.display = 'none';
-    if (pinModal) pinModal.style.display = 'none';
-    if (editModal) editModal.style.display = 'none';
-    if (avatarModal) avatarModal.style.display = 'none';
+    document.addEventListener('click', function(e) {
+        const pinItem = e.target.closest('.pin-item[data-pin-id]');
+        if (!pinItem) return;
 
-    if (window.location.hash === '#pinModal' && pinModal) {
-        pinModal.style.display = 'flex';
-    }
+        if (
+            e.target.closest('.delete-cross') ||
+            e.target.closest('.like-button') ||
+            e.target.closest('.like-toggle-form') ||
+            e.target.closest('.collection-link') ||
+            e.target.closest('.outfit-edit-link') ||
+            e.target.closest('.outfit-edit-cta')
+        ) {
+            return;
+        }
+
+        const pinId = pinItem.dataset.pinId || '';
+        if (!pinId || isNaN(Number(pinId))) return;
+        openPinModal(pinId, pinItem);
+    });
 
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
@@ -321,33 +658,111 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelector('#pinModal .close-button')?.addEventListener('click', () => {
-        console.log('pinModal close button clicked');
-        closePinModal();
-    });
+    const pinId = new URLSearchParams(window.location.search).get('pin_id');
+    if (pinId) {
+        const selectedPin = document.querySelector('.pin-item[data-pin-id="' + CSS.escape(pinId) + '"]');
+        openPinModal(pinId, selectedPin || null);
+    }
 
-    document.getElementById('modalLikeButton')?.addEventListener('click', () => {
-        const pinId = document.getElementById('modalLikeButton').getAttribute('data-pin-id');
-        pinData[pinId].likes += 1;
-        document.getElementById('modalLikeCount').textContent = pinData[pinId].likes;
+    const commentForm = document.getElementById('modalCommentForm');
+    const commentInput = document.getElementById('modalCommentInput');
+    if (commentForm && commentInput) {
+        commentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
 
-        const likeCountSpan = document.querySelector(`.like-count[data-pin-id="${pinId}"] span`);
-        if (likeCountSpan) {
-            likeCountSpan.textContent = pinData[pinId].likes;
-        }
-    });
+            const commentText = commentInput.value.trim();
+            if (!commentText) {
+                return;
+            }
+
+            const submitButton = commentForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            const formData = new FormData(commentForm);
+            formData.append('add_comment', '1');
+            formData.append('ajax', '1');
+            if (typeof appendCsrfToken === 'function') {
+                appendCsrfToken(formData);
+            }
+
+            const submitUrl = new URL(window.location.href);
+            const activePinId = formData.get('pin_id') || new URLSearchParams(window.location.search).get('pin_id') || '';
+            if (activePinId) {
+                submitUrl.searchParams.set('pin_id', activePinId);
+            }
+            submitUrl.searchParams.set('ajax', '1');
+
+            fetch(submitUrl.toString(), {
+                method: 'POST',
+                headers: typeof getCsrfHeaders === 'function' ? getCsrfHeaders({
+                    'X-Requested-With': 'XMLHttpRequest'
+                }) : {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+                .then(async response => {
+                    const responseText = await response.text();
+                    let data = null;
+
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (e) {
+                        const successMarkerIndex = responseText.indexOf('{"success"');
+                        const jsonStart = successMarkerIndex !== -1 ? successMarkerIndex : responseText.indexOf('{');
+                        const jsonEnd = responseText.lastIndexOf('}');
+                        if (jsonStart !== -1 && jsonEnd > jsonStart) {
+                            const candidateJson = responseText.slice(jsonStart, jsonEnd + 1);
+                            try {
+                                data = JSON.parse(candidateJson);
+                            } catch (innerError) {
+                                throw new Error('Invalid server response');
+                            }
+                        } else {
+                            throw new Error('Invalid server response');
+                        }
+                    }
+
+                    if (!response.ok || !data || !data.success || !data.comment) {
+                        throw new Error(data?.message || 'Failed to add comment');
+                    }
+
+                    return data;
+                })
+                .then(data => {
+                    appendCommentToModal(data.comment);
+                    commentInput.value = '';
+                })
+                .catch(error => {
+                    console.error('Error adding comment:', error);
+                    alert('Could not add comment. Please try again.');
+                })
+                .finally(() => {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                });
+        });
+    }
 });
 
 document.addEventListener('click', function(e) {
     const pinModal = document.getElementById('pinModal');
+    const reportModal = document.getElementById('reportModal');
     const createModal = document.getElementById('createModal');
     const deleteModal = document.getElementById('deleteModal');
     const deleteCollectionModal = document.getElementById('deleteCollectionModal');
     const editModal = document.getElementById('editModal');
     const avatarModal = document.getElementById('avatarModal');
+    const followListModal = document.getElementById('followListModal');
 
     if (e.target === pinModal) {
         closePinModal();
+    }
+    if (e.target === reportModal) {
+        closeReportModal();
     }
     if (e.target === createModal) {
         closeCreateModal();
@@ -364,16 +779,22 @@ document.addEventListener('click', function(e) {
     if (e.target === avatarModal) {
         closeAvatarModal();
     }
+    if (e.target === followListModal && typeof closeFollowListModal === 'function') {
+        closeFollowListModal();
+    }
 });
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        console.log('Escape key pressed');
         closePinModal();
+        closeReportModal();
         closeCreateModal();
         closeDeleteModal();
         closeDeleteCollectionModal();
         closeEditModal();
         closeAvatarModal();
+        if (typeof closeFollowListModal === 'function') {
+            closeFollowListModal();
+        }
     }
 });

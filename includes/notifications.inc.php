@@ -1,11 +1,6 @@
 <?php
 
-function ensureNotificationsTable(PDO $pdo) {
-    static $initialized = false;
-    if ($initialized) {
-        return;
-    }
-
+function createNotificationsTable(PDO $pdo): void {
     $sql = "
         CREATE TABLE IF NOT EXISTS notifications (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,6 +17,44 @@ function ensureNotificationsTable(PDO $pdo) {
     ";
 
     $pdo->exec($sql);
+}
+
+function isBrokenNotificationsTableError(Throwable $error): bool {
+    $message = strtolower((string) $error->getMessage());
+    $errorInfo = $error instanceof PDOException ? ($error->errorInfo ?? []) : [];
+    $sqlState = (string) ($errorInfo[0] ?? $error->getCode() ?? '');
+    $driverCode = (string) ($errorInfo[1] ?? '');
+
+    if ($sqlState === '42S02' || $driverCode === '1932') {
+        return true;
+    }
+
+    return str_contains($message, 'notifications')
+        && (str_contains($message, "doesn't exist in engine") || str_contains($message, 'base table or view not found'));
+}
+
+function ensureNotificationsTable(PDO $pdo) {
+    static $initialized = false;
+    if ($initialized) {
+        return;
+    }
+
+    try {
+        createNotificationsTable($pdo);
+        $pdo->query('SELECT 1 FROM notifications LIMIT 1');
+        $initialized = true;
+        return;
+    } catch (Throwable $error) {
+        if (!isBrokenNotificationsTableError($error)) {
+            throw $error;
+        }
+
+        error_log('Notifications table appears broken, recreating it: ' . $error->getMessage());
+    }
+
+    $pdo->exec('DROP TABLE IF EXISTS notifications');
+    createNotificationsTable($pdo);
+    $pdo->query('SELECT 1 FROM notifications LIMIT 1');
     $initialized = true;
 }
 

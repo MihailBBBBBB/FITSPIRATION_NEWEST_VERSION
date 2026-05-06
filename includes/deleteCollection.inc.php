@@ -3,11 +3,14 @@ session_start();
 header('Content-Type: application/json');
 
 include_once 'dbh.inc.php';
+include_once 'csrf.inc.php';
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'error' => 'Not logged in']);
     exit();
 }
+
+requireValidCsrfToken(true);
 
 $user_id = $_SESSION['user_id'];
 $collection_id = isset($_POST['collection_id']) ? $_POST['collection_id'] : null;

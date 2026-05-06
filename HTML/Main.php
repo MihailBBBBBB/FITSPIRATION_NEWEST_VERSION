@@ -1,6 +1,26 @@
 <?php
 session_start();
+require_once '../includes/dbh.inc.php';
+require_once '../includes/outfits_schema.inc.php';
 include_once '../JS/headerFooter.php';
+$isGuest = !isset($_SESSION['user_id']);
+
+$introChallenge = [
+    'theme' => 'Weekly Outfit Challenge',
+    'description' => 'Join this week\'s challenge and share your strongest look with the community.',
+    'week_key' => '',
+];
+
+try {
+    $activeIntroChallenge = ensureCurrentWeeklyChallenge($pdo);
+    if (is_array($activeIntroChallenge)) {
+        $introChallenge['theme'] = (string) ($activeIntroChallenge['theme'] ?? $introChallenge['theme']);
+        $introChallenge['description'] = (string) ($activeIntroChallenge['description'] ?? $introChallenge['description']);
+        $introChallenge['week_key'] = (string) ($activeIntroChallenge['week_key'] ?? '');
+    }
+} catch (Throwable $challengeError) {
+    error_log('Main intro challenge load failed: ' . $challengeError->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -8,10 +28,10 @@ include_once '../JS/headerFooter.php';
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Main</title>
+        <title>Fitspiration | Join the Community</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-        <link rel="stylesheet" href="../CSS/Main.css"/>
+        <link rel="stylesheet" href="../CSS/Main.css?v=16"/>
         <script src="../JS/translator.js"></script>
     </head>
     <body>
@@ -19,91 +39,135 @@ include_once '../JS/headerFooter.php';
         <special-header></special-header>
         
         <div class="layout">
-            
-            <special-aside></special-aside>
-            
-            <main class="main-content">
-                <h2>Discover the Best Fashion Trends</h2>
-                
-                <div class="category-grid">
-                    <div class="category-card">
-                        <img src="../images/Opium.jpg" alt="Opium">
-                        <div class="text-overlay">Opium</div>
+            <?php if (!$isGuest): ?>
+                <special-aside></special-aside>
+            <?php endif; ?>
+
+            <main class="main-content intro-main<?php echo $isGuest ? ' no-sidebar' : ''; ?>">
+                <section class="intro-hero">
+                    <div class="intro-hero-copy">
+                        <p class="intro-eyebrow">FASHION COMMUNITY PLATFORM</p>
+                        <h2>Build outfits, discover style, and get inspired by real people.</h2>
+                        <p class="intro-sub">
+                            Fitspiration is where creators and fashion lovers share outfit ideas, remix looks,
+                            and build personal style together.
+                        </p>
+
+                        <div class="intro-cta-row">
+                            <?php if ($isGuest): ?>
+                                <a class="intro-btn primary" href="Registration.php">Join the community</a>
+                                <a class="intro-btn ghost" href="LogIn.php">I already have an account</a>
+                            <?php else: ?>
+                                <a class="intro-btn primary" href="Home.php">Go to community feed</a>
+                                <a class="intro-btn ghost" href="OutfitBuilder.php">Open outfit builder</a>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    <div class="category-card">
-                        <img src="../images/Old_money.jpg" alt="Old money">
-                        <div class="text-overlay">Old money</div>
+
+                    <div class="intro-hero-grid" aria-hidden="true">
+                        <article class="intro-shot tall">
+                            <img src="../images/Streetwear.jpg" alt="Streetwear inspiration">
+                        </article>
+                        <article class="intro-shot">
+                            <img src="../images/Old_money.jpg" alt="Old money style">
+                        </article>
+                        <article class="intro-shot wide">
+                            <img src="../images/Accessories.jpg" alt="Accessories and details">
+                        </article>
                     </div>
-                    <div class="category-card">
-                        <img src="../images/Streetwear.jpg" alt="Streetwear">
-                        <div class="text-overlay">Streetwear</div>
+                </section>
+
+                <section class="intro-features">
+                    <h3>Why people join Fitspiration</h3>
+                    <div class="intro-feature-grid">
+                        <article class="intro-feature-card">
+                            <i class="fa-solid fa-shirt"></i>
+                            <h4>Outfit Builder</h4>
+                            <p>Combine pieces, auto-match outfits, and preview full looks before posting.</p>
+                        </article>
+                        <article class="intro-feature-card">
+                            <i class="fa-solid fa-compass"></i>
+                            <h4>Discover Feed</h4>
+                            <p>Find pins, outfits, and creators by style, season, color, and visual similarity.</p>
+                        </article>
+                        <article class="intro-feature-card">
+                            <i class="fa-solid fa-people-group"></i>
+                            <h4>Community</h4>
+                            <p>Follow creators, save ideas, remix outfit posts, and grow your fashion network.</p>
+                        </article>
                     </div>
-                    <div class="category-card">
-                        <img src="../images/Accessories.jpg" alt="Accessories">
-                        <div class="text-overlay">Accessories</div>
+                </section>
+
+                <section class="intro-steps">
+                    <h3>How it works</h3>
+                    <div class="intro-step-list">
+                        <article class="intro-step">
+                            <span>1</span>
+                            <p>Create your profile and share your style preferences.</p>
+                        </article>
+                        <article class="intro-step">
+                            <span>2</span>
+                            <p>Explore the feed, collect ideas, and follow people who match your vibe.</p>
+                        </article>
+                        <article class="intro-step">
+                            <span>3</span>
+                            <p>Build and publish outfits, then get feedback from the community.</p>
+                        </article>
                     </div>
-                </div>
-                
-                <h3>Browse by Category</h3>
-                
-                <div class="category-grid1">
-                    <div class="category-card">
-                        <img src="../images/Hats.jpg" alt="Hats">
-                        <div class="text-overlay">Hats</div>
+                </section>
+
+                <section class="intro-challenge">
+                    <div class="intro-challenge-copy">
+                        <p class="intro-challenge-eyebrow">WEEKLY EVENT</p>
+                        <h3>Outfit Challenge</h3>
+                        <p>
+                            Every week we drop a new theme where members build and post their best look.
+                            It is a fun way to try new aesthetics, get feedback, and discover fresh creators.
+                        </p>
+                        <ul>
+                            <li>New theme every week</li>
+                            <li>Community voting and engagement</li>
+                            <li>Featured looks in the challenge feed</li>
+                        </ul>
+                        <a class="intro-btn ghost" href="OutfitChallenge.php">Explore Outfit Challenge</a>
                     </div>
-                    <div class="category-card">
-                        <img src="../images/Jackets.jpg" alt="Jackets">
-                        <div class="text-overlay">Jackets</div>
+                    <article class="intro-challenge-card" aria-label="Outfit challenge highlight">
+                        <span>Current Theme</span>
+                        <h4><?php echo htmlspecialchars($introChallenge['theme']); ?></h4>
+                        <p><?php echo htmlspecialchars($introChallenge['description']); ?></p>
+                        <?php if ($introChallenge['week_key'] !== ''): ?>
+                            <p class="intro-challenge-week"><?php echo htmlspecialchars($introChallenge['week_key']); ?></p>
+                        <?php endif; ?>
+                    </article>
+                </section>
+
+                <section class="intro-faq">
+                    <h3>Quick FAQ</h3>
+                    <div class="intro-faq-list">
+                        <details class="intro-faq-item" open>
+                            <summary>Do I need to pay to join?</summary>
+                            <p>No. Creating an account and exploring the community is free.</p>
+                        </details>
+                        <details class="intro-faq-item">
+                            <summary>Can I keep my collections private?</summary>
+                            <p>Yes. You can control privacy on your collections and choose what to share publicly.</p>
+                        </details>
+                        <details class="intro-faq-item">
+                            <summary>What can I do after signing up?</summary>
+                            <p>You can save pins, follow creators, build outfits, and publish your own looks.</p>
+                        </details>
                     </div>
-                    <div class="category-card">
-                        <img src="../images/Jeans.jpg" alt="Denim">
-                        <div class="text-overlay">Denim</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/T_shirts.jpg" alt="T-shirts">
-                        <div class="text-overlay">T-shirts</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Sweats.jpg" alt="Sweats">
-                        <div class="text-overlay">Sweats</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Boots.jpg" alt="Boots">
-                        <div class="text-overlay">Boots</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Bags.jpg" alt="Bags">
-                        <div class="text-overlay">Bags</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Coats.jpg" alt="Coats">
-                        <div class="text-overlay">Coats</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Glasses.jpg" alt="Glasses">
-                        <div class="text-overlay">Glasses</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Dresses.jpg" alt="Dresses">
-                        <div class="text-overlay">Dresses</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Skirts.jpg" alt="Skirts">
-                        <div class="text-overlay">Skirts</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Belts.jpg" alt="Belts">
-                        <div class="text-overlay">Belts</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Knitwear.jpg" alt="Knitwear">
-                        <div class="text-overlay">Knitwear</div>
-                    </div>
-                    <div class="category-card">
-                        <img src="../images/Polo.jpg" alt="Polo">
-                        <div class="text-overlay">Polo</div>
-                    </div>
-                </div>
+                </section>
+
+                <section class="intro-final-cta">
+                    <h3>Ready to find your next look?</h3>
+                    <p>Join Fitspiration and turn inspiration into outfits you can actually wear.</p>
+                    <?php if ($isGuest): ?>
+                        <a class="intro-btn primary" href="Registration.php">Create your account</a>
+                    <?php else: ?>
+                        <a class="intro-btn primary" href="Home.php">Open your feed</a>
+                    <?php endif; ?>
+                </section>
             </main>
         </div>
         

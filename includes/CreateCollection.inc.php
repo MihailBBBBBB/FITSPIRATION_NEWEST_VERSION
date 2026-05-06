@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once "csrf.inc.php";
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -37,10 +40,19 @@ function validateAndSaveImage($file, $upload_dir = '../images/') {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $title = $_POST["title"];
-    $description = $_POST["description"];
-    $privacy = $_POST["privacy"];
+    requireValidCsrfToken();
+    $title = trim((string)($_POST["title"] ?? ''));
+    $description = trim((string)($_POST["description"] ?? ''));
+    $privacy = strtolower(trim((string)($_POST["privacy"] ?? '')));
     $user_id = $_SESSION['user_id'];
+
+    if ($title === '' || !in_array($privacy, ['public', 'private'], true)) {
+        $_SESSION['collection_error'] = "Invalid collection data.";
+        header("Location: ../HTML/CreateCollection.php?error=invalidinput");
+        exit();
+    }
+
+    $privacy = $privacy === 'public' ? 'Public' : 'Private';
 
     // Handle image upload
     $cover_image = null;

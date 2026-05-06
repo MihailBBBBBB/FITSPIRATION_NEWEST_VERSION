@@ -5,6 +5,8 @@ class Translator {
         this.preferredLanguage = this.getSavedLanguage();
         this.translations = {};
         this.isLoaded = false;
+        this.observer = null;
+        this.nativeDialogsPatched = false;
         this.userContentSelectors = [
             '.no-translate',
             '[data-user-content="true"]',
@@ -15,7 +17,16 @@ class Translator {
             '.follow-username',
             '.follow-list-item',
             '.comment-item',
-            '.comment-content'
+            '.comment-content',
+            '.username',
+            '.notification-actor',
+            '.collab-name',
+            '.entry-author',
+            '.winner-author',
+            '.collection-collaborator-name',
+            '#modalCommentList li',
+            '.comment-list li',
+            '.message-item .message-content p'
         ];
         this.init();
     }
@@ -47,8 +58,43 @@ class Translator {
             const data = await response.json();
             this.translations = data.translations;
             this.isLoaded = true;
+            this.observeDomChanges();
+            this.patchNativeDialogs();
         } catch (error) {
             console.error('Failed to load translations:', error);
+        }
+    }
+
+    patchNativeDialogs() {
+        if (this.nativeDialogsPatched || typeof window === 'undefined') {
+            return;
+        }
+
+        this.nativeDialogsPatched = true;
+
+        const originalAlert = window.alert ? window.alert.bind(window) : null;
+        const originalConfirm = window.confirm ? window.confirm.bind(window) : null;
+        const originalPrompt = window.prompt ? window.prompt.bind(window) : null;
+
+        if (originalAlert) {
+            window.alert = (message) => {
+                const text = String(message == null ? '' : message);
+                return originalAlert(this.t(text));
+            };
+        }
+
+        if (originalConfirm) {
+            window.confirm = (message) => {
+                const text = String(message == null ? '' : message);
+                return originalConfirm(this.t(text));
+            };
+        }
+
+        if (originalPrompt) {
+            window.prompt = (message, defaultValue) => {
+                const text = String(message == null ? '' : message);
+                return originalPrompt(this.t(text), defaultValue);
+            };
         }
     }
 
@@ -82,56 +128,223 @@ class Translator {
             return;
         }
 
-        // Get all text nodes
-        const textNodes = this.getAllTextNodes(document.body);
-        textNodes.forEach(node => {
-            const text = node.textContent;
-            const translatedText = this.translateText(text, dictionary);
-
-            if (translatedText !== text) {
-                node.textContent = translatedText;
-            }
-        });
-
-        // Update placeholders in input fields
-        const inputs = document.querySelectorAll('input[placeholder]');
-        inputs.forEach(input => {
-            const placeholder = input.placeholder;
-            const translatedPlaceholder = this.translateText(placeholder, dictionary);
-            if (translatedPlaceholder !== placeholder) {
-                input.placeholder = translatedPlaceholder;
-            }
-        });
-
-        // Update button text
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            const text = button.textContent.trim();
-            const translatedText = this.translateText(text, dictionary);
-            if (translatedText !== text) {
-                button.textContent = translatedText;
-            }
-        });
-
-        // Translate select options for static UI dropdowns (e.g., sorting),
-        // but skip likely user-generated options (numeric ids).
-        const options = document.querySelectorAll('select option');
-        options.forEach(option => {
-            const optionValue = (option.getAttribute('value') || '').trim();
-            if (/^\d+$/.test(optionValue)) {
-                return;
-            }
-
-            const text = option.textContent;
-            const translatedText = this.translateText(text, dictionary);
-            if (translatedText !== text) {
-                option.textContent = translatedText;
-            }
-        });
+        this.translateElementTree(document.body, dictionary);
+        this.translateDocumentTitle(dictionary);
 
         this.currentLanguage = targetLanguage;
         this.saveLanguage(targetLanguage);
         this.updateTranslateButton();
+    }
+
+    observeDomChanges() {
+        if (this.observer || !document.body || typeof MutationObserver === 'undefined') {
+            return;
+        }
+
+        this.observer = new MutationObserver(mutations => {
+            if (this.currentLanguage === 'en' || !this.isLoaded) {
+                return;
+            }
+
+            const dictionary = this.translations[this.currentLanguage];
+            if (!dictionary) {
+                return;
+            }
+
+            mutations.forEach(mutation => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            if (!this.isUserGeneratedNode(node)) {
+                                const translated = this.translateText(node.textContent, dictionary);
+                                if (translated !== node.textContent) {
+                                    node.textContent = translated;
+                                }
+                            }
+                            return;
+                        }
+
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            this.translateElementTree(node, dictionary);
+                        }
+                    });
+                }
+
+                if (mutation.type === 'attributes' && mutation.target && mutation.target.nodeType === Node.ELEMENT_NODE) {
+                    this.translateElementAttributes(mutation.target, dictionary);
+                }
+            });
+        });
+
+        this.observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['placeholder', 'title', 'aria-label', 'value']
+        });
+    }
+
+    translateDocumentTitle(dictionary) {
+        if (!document || typeof document.title !== 'string') {
+            return;
+        }
+
+        const translatedTitle = this.translateText(document.title, dictionary);
+        if (translatedTitle !== document.title) {
+            document.title = translatedTitle;
+        }
+    }
+
+    translateElementTree(root, dictionary) {
+        if (!root || !dictionary) {
+            return;
+        }
+
+        if (root.nodeType === Node.TEXT_NODE) {
+            if (!this.isUserGeneratedNode(root)) {
+                const translatedText = this.translateText(root.textContent, dictionary);
+                if (translatedText !== root.textContent) {
+                    root.textContent = translatedText;
+                }
+            }
+            return;
+        }
+
+        if (root.nodeType !== Node.ELEMENT_NODE || this.isUserGeneratedElement(root)) {
+            return;
+        }
+
+        const textNodes = this.getAllTextNodes(root);
+        textNodes.forEach(node => {
+            const translatedText = this.translateText(node.textContent, dictionary);
+            if (translatedText !== node.textContent) {
+                node.textContent = translatedText;
+            }
+        });
+
+        this.translateElementAttributes(root, dictionary);
+
+        const descendants = root.querySelectorAll('*');
+        descendants.forEach(element => {
+            this.translateElementAttributes(element, dictionary);
+        });
+    }
+
+    translateElementAttributes(element, dictionary) {
+        if (!element || this.isUserGeneratedElement(element)) {
+            return;
+        }
+
+        const explicitTranslationKey = (element.getAttribute('data-translate') || '').trim();
+        if (explicitTranslationKey) {
+            // Store the original text only once
+            if (!element.hasAttribute('data-original-text')) {
+                if (element.tagName === 'OPTION') {
+                    element.setAttribute('data-original-text', element.textContent);
+                } else if (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())) {
+                    element.setAttribute('data-original-text', element.value);
+                } else {
+                    element.setAttribute('data-original-text', element.textContent);
+                }
+            }
+
+            // Always restore original English text when switching to English
+            if (this.currentLanguage === 'en' && element.hasAttribute('data-original-text')) {
+                const originalText = element.getAttribute('data-original-text');
+                if (element.tagName === 'OPTION') {
+                    element.textContent = originalText;
+                    element.label = originalText;
+                    this.refreshTranslatedSelect(element.parentElement);
+                } else if (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())) {
+                    element.value = originalText;
+                } else {
+                    element.textContent = originalText;
+                }
+            } else {
+                // Otherwise, translate as before
+                const translatedExplicitText = this.translateText(explicitTranslationKey, dictionary);
+                if (element.tagName === 'OPTION') {
+                    element.textContent = translatedExplicitText;
+                    element.label = translatedExplicitText;
+                    this.refreshTranslatedSelect(element.parentElement);
+                } else if (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())) {
+                    element.value = translatedExplicitText;
+                } else {
+                    element.textContent = translatedExplicitText;
+                }
+            }
+
+            // Otherwise, translate as before
+            const translatedExplicitText = this.translateText(explicitTranslationKey, dictionary);
+            if (element.tagName === 'OPTION') {
+                element.textContent = translatedExplicitText;
+                element.label = translatedExplicitText;
+                this.refreshTranslatedSelect(element.parentElement);
+            } else if (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())) {
+                element.value = translatedExplicitText;
+            } else {
+                element.textContent = translatedExplicitText;
+            }
+        }
+
+        ['placeholder', 'title', 'aria-label'].forEach(attr => {
+            const value = element.getAttribute(attr);
+            if (!value) {
+                return;
+            }
+
+            const translated = this.translateText(value, dictionary);
+            if (translated !== value) {
+                element.setAttribute(attr, translated);
+            }
+        });
+
+        if (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())) {
+            const value = element.value;
+            if (typeof value === 'string' && value.trim()) {
+                const translatedValue = this.translateText(value, dictionary);
+                if (translatedValue !== value) {
+                    element.value = translatedValue;
+                }
+            }
+        }
+
+        if (element.tagName === 'OPTION') {
+            const optionValue = (element.getAttribute('value') || '').trim();
+            if (/^\d+$/.test(optionValue)) {
+                return;
+            }
+
+            const optionText = explicitTranslationKey || element.textContent;
+            const translatedOptionText = this.translateText(optionText, dictionary);
+            if (translatedOptionText !== optionText) {
+                element.textContent = translatedOptionText;
+                element.label = translatedOptionText;
+                this.refreshTranslatedSelect(element.parentElement);
+            }
+        }
+    }
+
+    refreshTranslatedSelect(selectElement) {
+        if (!selectElement || selectElement.tagName !== 'SELECT') {
+            return;
+        }
+
+        const selectedIndex = selectElement.selectedIndex;
+        if (selectedIndex < 0) {
+            return;
+        }
+
+        const selectedValue = selectElement.value;
+        selectElement.selectedIndex = -1;
+
+        if (selectedValue !== '') {
+            selectElement.value = selectedValue;
+        }
+
+        if (selectElement.selectedIndex === -1) {
+            selectElement.selectedIndex = selectedIndex;
+        }
     }
 
     getAllTextNodes(element) {
@@ -180,7 +393,7 @@ class Translator {
             return false;
         }
 
-        if (parent.closest(this.userContentSelectors.join(', '))) {
+        if (this.isUserGeneratedElement(parent)) {
             return true;
         }
 
@@ -207,6 +420,26 @@ class Translator {
             if (/^\d+$/.test(optionValue.trim())) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    isUserGeneratedElement(element) {
+        if (!element) {
+            return false;
+        }
+
+        if (element.closest(this.userContentSelectors.join(', '))) {
+            return true;
+        }
+
+        if (element.closest('[contenteditable="true"]')) {
+            return true;
+        }
+
+        if (element.hasAttribute('data-user-content') && element.getAttribute('data-user-content') === 'true') {
+            return true;
         }
 
         return false;
@@ -246,7 +479,8 @@ class Translator {
 
     t(text) {
         if (!this.isLoaded || !text) return text;
-        const dictionary = this.translations[this.currentLanguage];
+        if (this.currentLanguage === 'en') return text;
+        const dictionary = this.translations['en'];
         if (!dictionary) return text;
         return this.translateText(text, dictionary);
     }

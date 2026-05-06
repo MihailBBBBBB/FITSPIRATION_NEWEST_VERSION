@@ -1,8 +1,8 @@
 <?php
 session_start();
 $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'date_desc';
-include_once '../JS/headerFooter.php';
 include_once '../includes/Profile.inc.php';
+include_once '../JS/headerFooter.php';
 
 // Allow viewing profiles without login (for clicking creator links).
 ?>
@@ -16,19 +16,27 @@ include_once '../includes/Profile.inc.php';
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-        <link rel="stylesheet" href="../CSS/Profile.css"/>
-        <link rel="stylesheet" href="../CSS/Main.css"/>
-        <link rel="stylesheet" href="../CSS/Home.css"/>
+        <link rel="stylesheet" href="../CSS/Profile.css?v=22"/>
+        <link rel="stylesheet" href="../CSS/Main.css?v=13"/>
+        <link rel="stylesheet" href="../CSS/Home.css?v=25"/>
+        <script src="../JS/csrf.js"></script>
         <script src="../JS/translator.js"></script>
     </head>
-    <body>
+    <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
         <special-header></special-header>
         
         <div class="layout">
             <special-aside></special-aside>
             
-            <div class="profile-container">
+            <div class="profile-container" data-remove-liked-on-unlike="<?php echo (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id) ? '1' : '0'; ?>">
+                <?php if (isset($_GET['report_status'])): ?>
+                    <div class="report-alert <?php echo $_GET['report_status'] === 'ok' ? 'is-ok' : 'is-error'; ?>">
+                        <?php echo htmlspecialchars(urldecode($_GET['report_msg'] ?? 'Report action completed.')); ?>
+                    </div>
+                <?php endif; ?>
                 <div class="profile-header">
+                    <div class="profile-header-copy">
+                        <p class="profile-eyebrow">Personal Space</p>
                     <img src="<?php echo $users['img'] ? '../images/' . htmlspecialchars($users['img']) : '../images/no_image.jpg'; ?>" 
                     alt="Profile" 
                     class="profile-avatar" 
@@ -37,14 +45,31 @@ include_once '../includes/Profile.inc.php';
                     <div class="profile-info">
                         <h1 class="no-translate" data-user-content="true"><?php echo htmlspecialchars($users['username']); ?></h1>
                         <p class="no-translate" data-user-content="true"><?php echo htmlspecialchars($users['description']); ?></p>
+                        <div class="profile-actions">
                         <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
                             <button class="edit-button" onclick="openEditModal()">Edit Profile</button>
-                            <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
+                            <button class="create-button" onclick="showCreateModal()">Create</button>
+                        <?php elseif (isset($_SESSION['user_id']) && isset($is_following)): ?>
+                            <form method="POST" action="" class="profile-follow-form">
+                                <?php echo csrfInput(); ?>
+                                <input type="hidden" name="target_user_id" value="<?php echo htmlspecialchars($view_user_id); ?>">
+                                <?php if ($is_following): ?>
+                                    <button type="submit" name="follow_action" value="unfollow" class="follow-button">Unfollow</button>
+                                <?php else: ?>
+                                    <button type="submit" name="follow_action" value="follow" class="follow-button">Follow</button>
+                                <?php endif; ?>
+                            </form>
+                            <button class="message-button" onclick="window.location.href='Messages.php?username=<?php echo htmlspecialchars($users['username']); ?>'">Message</button>
+                        <?php endif; ?>
+                        </div>
                             <div id="editModal" class="modal">
                                 <div class="edit-modal-content">
                                     <span class="close-button" onclick="closeEditModal()">×</span>
                                     <h2>Edit Profile</h2>
                                     <form method="POST" action="">
+                                        <?php echo csrfInput(); ?>
                                         <input type="text" name="username" value="<?php echo htmlspecialchars($users['username']); ?>" placeholder="Enter new username" required>
                                         <textarea name="description" placeholder="Enter new description"><?php echo htmlspecialchars($users['description']); ?></textarea>
                                         <button type="submit" name="update_profile">Save Changes</button>
@@ -58,6 +83,7 @@ include_once '../includes/Profile.inc.php';
                                     <span class="close-button" onclick="closeAvatarModal()">×</span>
                                     <h2>Change Profile Avatar</h2>
                                     <form method="POST" action="" enctype="multipart/form-data">
+                                        <?php echo csrfInput(); ?>
                                         <input type="hidden" name="update_avatar" value="1">
                                         <div class="upload-box">
                                             <label for="avatar-upload">
@@ -104,19 +130,24 @@ include_once '../includes/Profile.inc.php';
                                     </button>
                                 </div>
                             </div>
-                            <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
-                                <button class="create-button" onclick="showCreateModal()">Create</button>
-                            <?php elseif (isset($_SESSION['user_id']) && isset($is_following)): ?>
-                                <form method="POST" action="" style="display:inline; margin-left: 1rem;">
-                                    <input type="hidden" name="target_user_id" value="<?php echo htmlspecialchars($view_user_id); ?>">
-                                    <?php if ($is_following): ?>
-                                        <button type="submit" name="follow_action" value="unfollow" class="follow-button">Unfollow</button>
-                                    <?php else: ?>
-                                        <button type="submit" name="follow_action" value="follow" class="follow-button">Follow</button>
-                                    <?php endif; ?>
-                                </form>
-                            <?php endif; ?>
+
+                            <div class="profile-challenge-badges">
+                                <h3>Challenge Badges</h3>
+                                <div class="profile-challenge-badge-grid">
+                                    <span class="profile-challenge-badge <?php echo !empty($profileChallengeStats['badges']['weekly_participation']) ? 'earned' : ''; ?>">Weekly participation</span>
+                                    <span class="profile-challenge-badge <?php echo !empty($profileChallengeStats['badges']['top3_finisher']) ? 'earned' : ''; ?>">Top 3 finisher</span>
+                                    <span class="profile-challenge-badge <?php echo !empty($profileChallengeStats['badges']['first_win']) ? 'earned' : ''; ?>">First win</span>
+                                    <span class="profile-challenge-badge <?php echo !empty($profileChallengeStats['badges']['voting_streak']) ? 'earned' : ''; ?>">Voting streak</span>
+                                </div>
+                                <p>
+                                    Streaks: <?php echo (int) ($profileChallengeStats['participation_streak'] ?? 0); ?>w participation,
+                                    <?php echo (int) ($profileChallengeStats['voting_streak'] ?? 0); ?>w voting
+                                    · Top 3: <?php echo (int) ($profileChallengeStats['top3_finishes'] ?? 0); ?>
+                                    · Wins: <?php echo (int) ($profileChallengeStats['wins_count'] ?? 0); ?>
+                                </p>
+                            </div>
                         </div>
+                    </div>
                     </div>
 
                     <div id="followListModal" class="modal">
@@ -126,6 +157,7 @@ include_once '../includes/Profile.inc.php';
                             <ul id="followList" class="follow-list"></ul>
                         </div>
                     </div>
+
                     
                     <div class="profile-tabs">
                         <button class="tab-button active" data-tab="pins">Your Pins</button>
@@ -186,9 +218,9 @@ include_once '../includes/Profile.inc.php';
                                                 <div class="pin-info">
                                                     <h3 class="pin-title"><?php echo htmlspecialchars($pin['title'] ?? 'Untitled'); ?></h3>
                                                     <div class="pin-stats">
-                                                        <form method="POST" action="" style="margin: 0;">
+                                                        <form method="POST" action="" class="like-toggle-form" style="margin: 0;">
                                                             <input type="hidden" name="pin_id" value="<?php echo htmlspecialchars($pin['id']); ?>">
-                                                            <button type="submit" name="toggle_like" class="like-button <?php echo $pin['user_liked'] ? 'liked' : ''; ?>">
+                                                            <button type="submit" name="toggle_like" data-pin-id="<?php echo htmlspecialchars($pin['id']); ?>" class="like-button <?php echo $pin['user_liked'] ? 'liked' : ''; ?>">
                                                                 <i class="fas fa-heart"></i>
                                                                 <span class="like-count"><?php echo htmlspecialchars($pin['like_count']); ?></span>
                                                             </button>
@@ -231,13 +263,16 @@ include_once '../includes/Profile.inc.php';
                                                         </div>
                                                         <h3 id="modalPinTitle" class="pin-title"><?php echo $modal_pin_data['title']; ?></h3>
                                                         <div class="modal-pin-stats">
-                                                            <form method="POST" action="" style="margin: 0;">
+                                                            <form method="POST" action="" class="like-toggle-form" style="margin: 0;">
                                                                 <input type="hidden" name="pin_id" value="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>">
-                                                                <button type="submit" id="modalLikeButton" name="toggle_like" class="like-button <?php echo $modal_pin_data['user_liked'] ? 'liked' : ''; ?>">
+                                                                <button type="submit" id="modalLikeButton" data-pin-id="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>" name="toggle_like" class="like-button <?php echo $modal_pin_data['user_liked'] ? 'liked' : ''; ?>">
                                                                     <i class="fas fa-heart"></i>
                                                                     <span class="like-count" id="modalLikeCount"><?php echo $modal_pin_data['like_count']; ?></span>
                                                                 </button>
                                                             </form>
+                                                            <button type="button" class="report-flag-btn" onclick="openReportModal('pin', '<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>', '<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>')" title="Report pin">
+                                                                <i class="fa-solid fa-flag"></i>
+                                                            </button>
                                                         </div>
                                                         <div class="modal-comment-section">
                                                             <ul id="modalCommentList" class="comment-list">
@@ -246,28 +281,27 @@ include_once '../includes/Profile.inc.php';
                                                                         <li>
                                                                             <img src="<?php echo isset($comment['user_img']) && $comment['user_img'] ? '../images/' . htmlspecialchars($comment['user_img']) : '../images/no_image.jpg'; ?>" alt="User">
                                                                             <?php echo isset($comment['username']) ? htmlspecialchars($comment['username']) : 'Unknown'; ?>: <?php echo isset($comment['comment']) ? htmlspecialchars($comment['comment']) : ''; ?>
-                                                                            <?php 
-                                    $user_can_delete = false;
-                                    if (isset($comment['user_id']) && isset($_SESSION['user_id']) && $comment['user_id'] == $_SESSION['user_id']) {
-                                        $user_can_delete = true;
-                                    } elseif (isset($pin_data['user_id']) && isset($_SESSION['user_id']) && $pin_data['user_id'] == $_SESSION['user_id']) {
-                                        $user_can_delete = true;
-                                    }
-                                    if ($user_can_delete): ?>
-                                        <form method="POST" action="" class="comment-delete-form" style="display:inline;">
-                                            <input type="hidden" name="delete_comment" value="1">
-                                            <input type="hidden" name="comment_id" value="<?php echo htmlspecialchars($comment['id']); ?>">
-                                            <input type="hidden" name="pin_id" value="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>">
-                                            <button type="submit" class="comment-delete">×</button>
-                                        </form>
-                                        <?php endif; ?>
+                                                                            <?php
+                                                                            $user_can_delete = false;
+                                                                            if (isset($_SESSION['user_id'])) {
+                                                                                $sessionId = (int)$_SESSION['user_id'];
+                                                                                $commentAuthor = (int)($comment['user_id'] ?? 0);
+                                                                                $pinOwner = (int)($modal_pin_data['creator_id'] ?? 0);
+                                                                                $user_can_delete = ($commentAuthor === $sessionId) || ($pinOwner === $sessionId);
+                                                                            }
+                                                                            if ($user_can_delete): ?>
+                                                                                <button type="button" class="comment-delete-btn"
+                                                                                    data-comment-id="<?php echo htmlspecialchars($comment['id']); ?>"
+                                                                                    data-pin-id="<?php echo htmlspecialchars($_GET['pin_id'] ?? ''); ?>"
+                                                                                    onclick="deleteComment(<?php echo htmlspecialchars($comment['id']); ?>, '<?php echo htmlspecialchars($_GET['pin_id'] ?? ''); ?>')">Delete</button>
+                                                                            <?php endif; ?>
                                     </li>
                                     <?php endforeach; ?>
                                     <?php else: ?>
                                         <li>No comments yet.</li>
                                         <?php endif; ?>
                                     </ul>
-                                    <form method="POST" action="">
+                                    <form method="POST" action="" id="modalCommentForm">
                                         <input type="hidden" name="pin_id" value="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>">
                                         <div class="comment-input">
                                             <input type="text" name="comment" id="modalCommentInput" placeholder="Add a comment..." required>
@@ -279,6 +313,35 @@ include_once '../includes/Profile.inc.php';
                         </div>
                     </div>
                 </div>
+
+                <div id="reportModal" class="report-modal" aria-hidden="true">
+                    <div class="report-modal-content">
+                        <button type="button" class="report-close" onclick="closeReportModal()">×</button>
+                        <h3 class="report-title">Report Content</h3>
+                        <p id="reportModalSubtitle" class="report-subtitle">Select a reason and tell us what happened.</p>
+                        <form method="POST" action="" class="report-form-modern">
+                            <input type="hidden" name="submit_report" value="1">
+                            <input type="hidden" name="report_target_type" id="reportTargetType" value="pin">
+                            <input type="hidden" name="report_target_id" id="reportTargetId" value="">
+                            <input type="hidden" name="pin_id" id="reportPinId" value="<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>">
+
+                            <select name="report_category" class="report-select-modern" required>
+                                <option value="">Select reason...</option>
+                                <option value="spam">Spam</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="nudity">Nudity/NSFW</option>
+                                <option value="hate">Hate Speech</option>
+                                <option value="misinformation">Misinformation</option>
+                                <option value="copyright">Copyright Violation</option>
+                                <option value="other">Other</option>
+                            </select>
+
+                            <textarea name="report_reason" class="report-textarea-modern" maxlength="255" placeholder="Describe the issue..." required></textarea>
+
+                            <button type="submit" class="report-submit-modern">Submit Report</button>
+                        </form>
+                    </div>
+                </div>
                 
                 <div class="delete-modal" id="deleteModal">
                     <div class="delete-modal-content">
@@ -287,7 +350,7 @@ include_once '../includes/Profile.inc.php';
                         <p id="deleteModalText">Do you really want to delete this pin? This action cannot be undone.</p>
                         <div class="delete-modal-buttons">
                             <button class="delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
-                            <button class="delete-modal-confirm" onclick="confirmDelete(); closeDeleteModal(); location.reload()">Delete</button>
+                            <button class="delete-modal-confirm" onclick="confirmDelete()">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -316,6 +379,30 @@ include_once '../includes/Profile.inc.php';
                                                 <div class="pin-stats">
                                                     <span><?php echo htmlspecialchars($collection['pin_count'] ?? '0'); ?> Pins</span>
                                                 </div>
+                                                <div class="collection-collaboration-meta">
+                                                    <div class="collection-role-label <?php echo htmlspecialchars((string) ($collection['access_role'] ?? 'viewer')); ?>">
+                                                        <?php echo htmlspecialchars(ucfirst((string) ($collection['access_role'] ?? 'viewer'))); ?>
+                                                    </div>
+                                                    <div class="collection-owner-row">
+                                                        <a class="collection-profile-link" href="Profile.php?user_id=<?php echo (int) ($collection['owner']['user_id'] ?? 0); ?>">
+                                                            <img src="<?php echo htmlspecialchars((string) ($collection['owner']['user_img'] ?? '../images/no_image.jpg')); ?>" alt="Owner">
+                                                            <span>Owner: <?php echo htmlspecialchars((string) ($collection['owner']['username'] ?? 'Unknown')); ?></span>
+                                                        </a>
+                                                    </div>
+
+                                                    <?php if (!empty($collection['collaborators'])): ?>
+                                                        <div class="collection-collaborator-list">
+                                                            <?php foreach ($collection['collaborators'] as $collaborator): ?>
+                                                                <a class="collection-collaborator-chip collection-profile-link" href="Profile.php?user_id=<?php echo (int) ($collaborator['user_id'] ?? 0); ?>" title="<?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'Unknown')); ?>">
+                                                                    <img src="<?php echo htmlspecialchars((string) ($collaborator['user_img'] ?? '../images/no_image.jpg')); ?>" alt="<?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'User')); ?>">
+                                                                    <span class="collection-collaborator-name"><?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'Unknown')); ?></span>
+                                                                </a>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="collection-collaborator-empty">No collaborators yet</div>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </a>
                                     </div>
@@ -330,7 +417,7 @@ include_once '../includes/Profile.inc.php';
                                         <p id="deleteCollectionModalText">Do you really want to delete this collection? This action cannot be undone.</p>
                                         <div class="delete-modal-buttons">
                                             <button class="delete-modal-cancel" onclick="closeDeleteCollectionModal()">Cancel</button>
-                                            <button class="delete-modal-confirm" onclick="confirmDeleteCollection(); closeDeleteModal(); location.reload()">Delete</button>
+                                            <button class="delete-modal-confirm" onclick="confirmDeleteCollection()">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -343,17 +430,37 @@ include_once '../includes/Profile.inc.php';
                                     <?php else: ?>
                                         <?php foreach ($outfits as $outfit): ?>
                                             <div class="pin-item outfit-card-item" data-outfit-id="<?php echo htmlspecialchars($outfit['id']); ?>">
-                                                <img
-                                                    src="<?php echo '../images/' . htmlspecialchars($outfit['img']); ?>"
-                                                    alt="<?php echo htmlspecialchars($outfit['name']); ?>"
-                                                    class="pin-image"
-                                                >
+                                                <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
+                                                    <a href="../HTML/OutfitBuilder.php?outfit_id=<?php echo (int) $outfit['id']; ?>" class="outfit-edit-link">
+                                                        <span class="outfit-edit-badge">Edit Outfit</span>
+                                                        <img
+                                                            src="<?php echo '../images/' . htmlspecialchars($outfit['img']); ?>"
+                                                            alt="<?php echo htmlspecialchars($outfit['name']); ?>"
+                                                            class="pin-image outfit-preview-image"
+                                                        >
+                                                    </a>
+                                                <?php else: ?>
+                                                    <img
+                                                        src="<?php echo '../images/' . htmlspecialchars($outfit['img']); ?>"
+                                                        alt="<?php echo htmlspecialchars($outfit['name']); ?>"
+                                                        class="pin-image outfit-preview-image"
+                                                    >
+                                                <?php endif; ?>
                                                 <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
                                                     <span class="delete-cross outfit-delete-cross"
                                                         data-outfit-id="<?php echo htmlspecialchars($outfit['id']); ?>">&times;</span>
                                                 <?php endif; ?>
                                                 <div class="pin-info">
-                                                    <h3 class="pin-title no-translate" data-user-content="true"><?php echo htmlspecialchars($outfit['name']); ?></h3>
+                                                    <h3 class="pin-title no-translate" data-user-content="true">
+                                                        <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
+                                                            <a href="../HTML/OutfitBuilder.php?outfit_id=<?php echo (int) $outfit['id']; ?>" class="outfit-edit-link"><?php echo htmlspecialchars($outfit['name']); ?></a>
+                                                        <?php else: ?>
+                                                            <?php echo htmlspecialchars($outfit['name']); ?>
+                                                        <?php endif; ?>
+                                                    </h3>
+                                                    <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
+                                                        <a href="../HTML/OutfitBuilder.php?outfit_id=<?php echo (int) $outfit['id']; ?>" class="outfit-edit-cta">Open in Builder</a>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
@@ -393,9 +500,9 @@ include_once '../includes/Profile.inc.php';
                                                     <div class="pin-info">
                                                         <h3 class="pin-title"><?php echo htmlspecialchars($pin['title'] ?? 'Untitled'); ?></h3>
                                                         <div class="pin-stats">
-                                                            <form method="POST" action="" style="margin: 0;">
+                                                            <form method="POST" action="" class="like-toggle-form" style="margin: 0;">
                                                                 <input type="hidden" name="pin_id" value="<?php echo htmlspecialchars($pin['id']); ?>">
-                                                                <button type="submit" name="toggle_like" class="like-button <?php echo $pin['user_liked'] ? 'liked' : ''; ?>">
+                                                                <button type="submit" name="toggle_like" data-pin-id="<?php echo htmlspecialchars($pin['id']); ?>" class="like-button <?php echo $pin['user_liked'] ? 'liked' : ''; ?>">
                                                                     <i class="fas fa-heart"></i>
                                                                     <span class="like-count"><?php echo htmlspecialchars($pin['like_count']); ?></span>
                                                                 </button>
@@ -493,7 +600,9 @@ include_once '../includes/Profile.inc.php';
                     try {
                         const res = await fetch('../includes/deleteOutfit.inc.php', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: typeof getCsrfHeaders === 'function'
+                                ? getCsrfHeaders({ 'Content-Type': 'application/json' })
+                                : { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ outfit_id: parseInt(outfitId, 10) })
                         });
                         const data = await res.json();
@@ -510,8 +619,10 @@ include_once '../includes/Profile.inc.php';
             });
         });
     </script>
+
+    <script></script>
     
-    <script src="../JS/Profile.js"></script>
-    <script src="../JS/Home.js"></script>
+    <script src="../JS/likes.js?v=1"></script>
+    <script src="../JS/Profile.js?v=9"></script>
 </body>
 </html>

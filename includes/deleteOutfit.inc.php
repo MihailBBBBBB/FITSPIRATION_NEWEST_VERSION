@@ -1,11 +1,14 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once 'csrf.inc.php';
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'error' => 'Not logged in']);
     exit();
 }
+
+requireValidCsrfToken(true);
 
 require_once 'dbh.inc.php';
 
