@@ -6,7 +6,12 @@ function getWebSocketUrl(): string {
         return $url;
     }
 
-    return 'ws://127.0.0.1:8081';
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $scheme = $https ? 'wss' : 'ws';
+    $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1';
+
+    return $scheme . '://' . $host . '/ws';
 }
 
 function getWebSocketSecret(): string {
