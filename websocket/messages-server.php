@@ -11,7 +11,7 @@ require_once __DIR__ . '/../includes/websocket_auth.inc.php';
 ensureNotificationsTable($pdo);
 
 $address = '0.0.0.0';
-$port = (int) (getenv('PORT') ?: 8081);
+$port = (int) (getenv('FITSPIRATION_INTERNAL_WS_PORT') ?: 8081);
 $displayHost = getenv('FITSPIRATION_WS_PUBLIC_HOST') ?: '127.0.0.1';
 $server = stream_socket_server("tcp://{$address}:{$port}", $errorNumber, $errorString);
 
