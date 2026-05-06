@@ -6,7 +6,7 @@ include_once '../includes/csrf.inc.php';
 $user_id = $_SESSION['user_id'] ?? null;
 
 if (!$user_id) {
-    header('Location: ../HTML/LogIn.php?error=notloggedin');
+    header('Location: ../HTML/Login.php?error=notloggedin');
     exit();
 }
 

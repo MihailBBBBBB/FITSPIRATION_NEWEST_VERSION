@@ -6,7 +6,7 @@ require_once '../includes/csrf.inc.php';
 
 // Redirect if not logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: LogIn.php");
+    header("Location: Login.php");
     exit();
 }
 

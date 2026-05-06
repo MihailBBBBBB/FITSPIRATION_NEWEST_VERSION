@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"] ?? '';
 
     if ($email === '' || $password === '') {
-        header("Location: ../HTML/LogIn.php?error=missingfields");
+        header("Location: ../HTML/Login.php?error=missingfields");
         exit();
     }
 
@@ -65,25 +65,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 header("Location: ../HTML/Home.php"); 
                 exit();
             } else {
-                header("Location: ../HTML/LogIn.php?error=wrongpassword");
+                header("Location: ../HTML/Login.php?error=wrongpassword");
                 exit();
             }
         } else {
-            header("Location: ../HTML/LogIn.php?error=usernotfound");
+            header("Location: ../HTML/Login.php?error=usernotfound");
             exit();
         }
 
     } catch (PDOException $e) {
         error_log("Login failed: " . $e->getMessage());
-        header("Location: ../HTML/LogIn.php?error=servererror");
+        header("Location: ../HTML/Login.php?error=servererror");
         exit();
     } catch (RuntimeException $e) {
         error_log("Login failed: " . $e->getMessage());
-        header("Location: ../HTML/LogIn.php?error=servererror");
+        header("Location: ../HTML/Login.php?error=servererror");
         exit();
     }
 } else {
-    header("Location: ../HTML/LogIn.php");
+    header("Location: ../HTML/Login.php");
     exit();
 }
 

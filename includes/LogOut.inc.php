@@ -4,5 +4,5 @@ session_start();
 session_unset();
 session_destroy();
 
-header("Location: ../HTML/Home.php");
+header("Location: ../HTML/Login.php");
 exit();

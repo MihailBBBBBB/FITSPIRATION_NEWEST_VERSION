@@ -3,12 +3,12 @@ require_once __DIR__ . '/reports.inc.php';
 require_once __DIR__ . '/csrf.inc.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../HTML/LogIn.php?error=notloggedin');
+    header('Location: ../HTML/Login.php?error=notloggedin');
     exit();
 }
 
 $current_admin_id = (int)$_SESSION['user_id'];
-ensureModerationTables($pdo);
+
 
 $adminCheck = $pdo->prepare('SELECT is_admin FROM registration WHERE id = :id LIMIT 1');
 $adminCheck->execute(['id' => $current_admin_id]);

@@ -60,7 +60,7 @@
                     <span id="dobError" class="error-message"></span>
                 </div>
                 <button type="submit" class="continue-button">Create Account</button>
-                <button type="button" class="login-button" onclick="window.location.href='LogIn.php'">Already have an account? Log In</button>
+                <button type="button" class="login-button" onclick="window.location.href='Login.php'">Already have an account? Log In</button>
             </form>
         </div>
     </div>

@@ -8,7 +8,7 @@ require_once '../includes/outfits_schema.inc.php';
 include_once '../JS/headerFooter.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../HTML/LogIn.php?error=notloggedin');
+    header('Location: ../HTML/Login.php?error=notloggedin');
     exit();
 }
 

@@ -56,7 +56,7 @@ try {
                         <div class="intro-cta-row">
                             <?php if ($isGuest): ?>
                                 <a class="intro-btn primary" href="Registration.php">Join the community</a>
-                                <a class="intro-btn ghost" href="LogIn.php">I already have an account</a>
+                                <a class="intro-btn ghost" href="Login.php">I already have an account</a>
                             <?php else: ?>
                                 <a class="intro-btn primary" href="Home.php">Go to community feed</a>
                                 <a class="intro-btn ghost" href="OutfitBuilder.php">Open outfit builder</a>
