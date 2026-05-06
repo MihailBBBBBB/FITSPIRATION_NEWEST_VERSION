@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 require_once 'csrf.inc.php';
+require_once 'image_storage.inc.php';
 
 function respondJson(array $payload, int $status = 200): void {
     if (ob_get_length()) {
@@ -172,10 +173,12 @@ if ($mimeType !== 'image/png') {
     respondJson(['success' => false, 'error' => 'Decoded content is not a valid PNG image'], 400);
 }
 
-$uploadDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
-if (!is_dir($uploadDir) || !is_writable($uploadDir)) {
-    respondJson(['success' => false, 'error' => 'Upload directory is not available'], 500);
+$directoryState = ensureFitspirationImagesDirectory();
+if (!$directoryState['success']) {
+    respondJson(['success' => false, 'error' => (string) $directoryState['error']], 500);
 }
+
+$uploadDir = $directoryState['path'];
 
 $fileName = uniqid('outfit_', true) . '.png';
 $filePath = $uploadDir . $fileName;

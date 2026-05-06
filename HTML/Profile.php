@@ -44,7 +44,7 @@ include_once '../JS/headerFooter.php';
                     style="<?php echo isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id ? 'cursor: pointer;' : ''; ?>">
                     <div class="profile-info">
                         <h1 class="no-translate" data-user-content="true"><?php echo htmlspecialchars($users['username']); ?></h1>
-                        <p class="no-translate" data-user-content="true"><?php echo htmlspecialchars($users['description']); ?></p>
+                        <p class="no-translate" data-user-content="true"><?php echo htmlspecialchars((string) ($users['description'] ?? '')); ?></p>
                         <div class="profile-actions">
                         <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
                             <button class="edit-button" onclick="openEditModal()">Edit Profile</button>
@@ -71,7 +71,7 @@ include_once '../JS/headerFooter.php';
                                     <form method="POST" action="">
                                         <?php echo csrfInput(); ?>
                                         <input type="text" name="username" value="<?php echo htmlspecialchars($users['username']); ?>" placeholder="Enter new username" required>
-                                        <textarea name="description" placeholder="Enter new description"><?php echo htmlspecialchars($users['description']); ?></textarea>
+                                        <textarea name="description" placeholder="Enter new description"><?php echo htmlspecialchars((string) ($users['description'] ?? '')); ?></textarea>
                                         <button type="submit" name="update_profile">Save Changes</button>
                                     </form>
                                 </div>

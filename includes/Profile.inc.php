@@ -10,6 +10,7 @@ include_once '../includes/likes.inc.php';
 include_once '../includes/csrf.inc.php';
 include_once '../includes/outfits_schema.inc.php';
 include_once '../includes/collection_collaboration.inc.php';
+include_once '../includes/image_storage.inc.php';
 
 ensureModerationTables($pdo);
 ensureCollectionCollaborationTables($pdo);
@@ -66,45 +67,6 @@ if ($session_user_id) {
     } catch (PDOException $e) {
         error_log('Error fetching current user profile: ' . $e->getMessage());
     }
-}
-
-function validateAndSaveImage($file, $upload_dir = null) {
-    if ($file['error'] !== 0) {
-        return ['success' => false, 'error' => 'File upload error code: ' . (int)$file['error']];
-    }
-
-    // Validate file type and size (less than 20MB)
-    $allowed_types = ['image/jpeg', 'image/png'];
-    $max_size = 20 * 1024 * 1024; // 20MB
-    $image_info = getimagesize($file['tmp_name']);
-    if ($image_info === false || !in_array($image_info['mime'], $allowed_types)) {
-        return ['success' => false, 'error' => 'Invalid image. Must be a .jpg or .png file.'];
-    }
-    if ($file['size'] > $max_size) {
-        return ['success' => false, 'error' => 'Image must be under 20MB.'];
-    }
-
-    if ($upload_dir === null) {
-        $upload_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
-    }
-
-    if (!is_dir($upload_dir)) {
-        return ['success' => false, 'error' => 'Upload directory not found.'];
-    }
-
-    if (!is_writable($upload_dir)) {
-        return ['success' => false, 'error' => 'Upload directory is not writable.'];
-    }
-
-    $extension = $image_info['mime'] === 'image/png' ? 'png' : 'jpg';
-    $file_name = uniqid('avatar_', true) . '.' . $extension;
-    $file_path = $upload_dir . $file_name;
-
-    if (!move_uploaded_file($file['tmp_name'], $file_path)) {
-        return ['success' => false, 'error' => 'Failed to save image.'];
-    }
-
-    return ['success' => true, 'path' => $file_name];
 }
 
 try {
@@ -359,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
         exit();
     }
     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $result = validateAndSaveImage($_FILES['avatar']);
+        $result = saveFitspirationUploadedImage($_FILES['avatar'], 'avatar_');
         if (!$result['success']) {
             error_log('Avatar upload error: ' . $result['error']);
             header("Location: Profile.php?user_id=" . urlencode($view_user_id) . "&error=" . urlencode($result['error']) . "&sort=" . urlencode($sort));

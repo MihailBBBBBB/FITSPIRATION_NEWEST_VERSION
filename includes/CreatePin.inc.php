@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once "csrf.inc.php";
+require_once "image_storage.inc.php";
 require_once "collection_collaboration.inc.php";
 require_once "discovery_filters.inc.php";
 
@@ -18,35 +19,6 @@ require_once "dbh.inc.php";
 $collection_options = getUserCreatableCollections($pdo, (int) $user_id);
 ensureDiscoveryFilterTables($pdo);
 $discoveryOptionSets = getDiscoveryFilterOptionSets();
-
-// Function to validate and save image
-function validateAndSaveImage($file, $upload_dir = '../images/') {
-    if ($file['error'] !== 0) {
-        return ['success' => false, 'error' => 'File upload error'];
-    }
-
-    // Validate file type and size (less than 20MB)
-    $allowed_types = ['image/jpeg', 'image/png'];
-    $max_size = 20 * 1024 * 1024; // 20MB
-    $image_info = getimagesize($file['tmp_name']);
-    if ($image_info === false || !in_array($image_info['mime'], $allowed_types)) {
-        return ['success' => false, 'error' => 'Invalid image. Must be a .jpg or .png file.'];
-    }
-    if ($file['size'] > $max_size) {
-        return ['success' => false, 'error' => 'Image must be under 20MB.'];
-    }
-
-    // Generate unique filename
-    $file_name = uniqid('pin_') . '.jpg';
-    $file_path = $upload_dir . $file_name;
-
-    // Save file to images folder
-    if (!move_uploaded_file($file['tmp_name'], $file_path)) {
-        return ['success' => false, 'error' => 'Failed to save image.'];
-    }
-
-    return ['success' => true, 'path' => $file_name];
-}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     requireValidCsrfToken();
@@ -77,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle image upload
     $pin_image = null;
     if (isset($_FILES['pin_image']) && $_FILES['pin_image']['error'] == 0) {
-        $result = validateAndSaveImage($_FILES['pin_image']);
+        $result = saveFitspirationUploadedImage($_FILES['pin_image'], 'pin_');
         if (!$result['success']) {
             $_SESSION['pin_error'] = $result['error'];
             header("Location: ../HTML/CreatePin.php?error=invalidimage");
