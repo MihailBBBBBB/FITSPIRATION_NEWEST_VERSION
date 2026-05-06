@@ -5,40 +5,6 @@ function ensureDiscoveryFilterTables(PDO $pdo): void {
     if ($initialized) {
         return;
     }
-
-    $pdo->exec(
-        "CREATE TABLE IF NOT EXISTS pin_discovery_meta (
-            pin_id INT NOT NULL PRIMARY KEY,
-            dominant_color VARCHAR(32) NOT NULL DEFAULT '',
-            style_tag VARCHAR(50) NOT NULL DEFAULT '',
-            season VARCHAR(20) NOT NULL DEFAULT '',
-            category VARCHAR(50) NOT NULL DEFAULT '',
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_pin_discovery_color (dominant_color),
-            INDEX idx_pin_discovery_style (style_tag),
-            INDEX idx_pin_discovery_season (season),
-            INDEX idx_pin_discovery_category (category)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-    );
-
-    $pdo->exec(
-        "CREATE TABLE IF NOT EXISTS smart_feed_filters (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            feed_name VARCHAR(120) NOT NULL,
-            dominant_color VARCHAR(32) NOT NULL DEFAULT '',
-            style_tag VARCHAR(50) NOT NULL DEFAULT '',
-            season VARCHAR(20) NOT NULL DEFAULT '',
-            category VARCHAR(50) NOT NULL DEFAULT '',
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_smart_feed_user (user_id),
-            INDEX idx_smart_feed_created (created_at)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-    );
-
-    $initialized = true;
 }
 
 function getDiscoveryFilterOptionSets(): array {

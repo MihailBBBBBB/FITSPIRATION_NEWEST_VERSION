@@ -30,7 +30,6 @@ function sendAjaxJson(array $payload): void {
     exit();
 }
 
-ensureModerationTables($pdo);
 ensureDiscoveryFilterTables($pdo);
 ensureVisualSimilarityTable($pdo);
 
@@ -939,7 +938,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_report'])) {
 }
 
 
-// Обработка лайка/дизлайка
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
     $user_id = $_SESSION['user_id'];
@@ -989,7 +987,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_like'])) {
     }
 }
 
-// Обработка добавления комментария
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
     $user_id = $_SESSION['user_id'];
@@ -1013,7 +1010,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
     }
     
     try {
-        // Проверяем, существует ли пин
         $query = "SELECT id FROM pins WHERE id = ?";
         $stmt = $pdo->prepare($query);
         $stmt->execute([$pin_id]);
@@ -1031,7 +1027,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
             exit();
         }
 
-        // Добавляем комментарий
         $query = "INSERT INTO comments (pin_id, user_id, comment, created_at) VALUES (?, ?, ?, NOW())";
         $stmt = $pdo->prepare($query);
         $stmt->execute([$pin_id, $user_id, $comment]);
@@ -1056,7 +1051,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
             ]);
         }
 
-        // Сохраняем pin_id и sort для перенаправления
         $redirect_url = "Home.php?pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
         if ($searchTerm) {
             $redirect_url .= "&search=" . urlencode($searchTerm);
@@ -1077,7 +1071,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
     }
 }
 
-// Обработка удаления комментария
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
     $comment_id = filter_var($_POST['comment_id'], FILTER_SANITIZE_NUMBER_INT);
     $pin_id = filter_var($_POST['pin_id'], FILTER_SANITIZE_NUMBER_INT);
@@ -1090,7 +1083,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
     error_log("Attempting to delete comment: user_id={$user_id}, comment_id={$comment_id}, pin_id={$pin_id}");
 
     try {
-        // Проверяем, существует ли комментарий и имеет ли пользователь право на удаление
         $query = "
             SELECT c.id, c.user_id, p.user_id as pin_owner_id
             FROM comments c
@@ -1114,7 +1106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
             exit();
         }
 
-        // Проверяем, является ли пользователь автором комментария или владельцем пина
         if ($comment_data['user_id'] != $user_id && $comment_data['pin_owner_id'] != $user_id) {
             error_log("Unauthorized comment deletion attempt: user_id={$user_id}, comment_id={$comment_id}");
             if ($isAjax) {
@@ -1128,7 +1119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
             exit();
         }
 
-        // Удаляем комментарий
         $query = "DELETE FROM comments WHERE id = ?";
         $stmt = $pdo->prepare($query);
         $stmt->execute([$comment_id]);
@@ -1142,7 +1132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
             ]);
         }
 
-        // Перенаправляем с сохранением состояния модала
         $redirect_url = "Home.php?pin_id=" . urlencode($pin_id) . "&sort=" . urlencode($sort);
         if ($searchTerm) {
             $redirect_url .= "&search=" . urlencode($searchTerm);
@@ -1163,13 +1152,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
     }
 }
 
-// Загрузка данных пина для модала
 $modal_pin_data = ['image' => '', 'title' => '', 'like_count' => 0, 'user_liked' => false, 'creator_name' => '', 'creator_id' => '', 'outfit_post_id' => null];
 if (isset($_GET['pin_id'])) {
     $pin_id = filter_var($_GET['pin_id'], FILTER_SANITIZE_NUMBER_INT);
     $user_id = $_SESSION['user_id'];
 
-    // Загружаем данные пина
     $query = "
         SELECT p.id, p.img, p.title,
                COALESCE(p.user_id, c.user_id) as creator_id,
@@ -1202,7 +1189,6 @@ if (isset($_GET['pin_id'])) {
         ];
     }
     
-    // Загружаем комментарии
     $query = "
     SELECT c.id, c.comment, c.created_at, c.user_id, r.username, r.img as user_img
     FROM comments c

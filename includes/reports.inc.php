@@ -41,66 +41,6 @@ function ensureTableIndex(PDO $pdo, string $tableName, string $indexName, string
     }
 }
 
-function ensureModerationTables(PDO $pdo): void {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS reports (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        reporter_user_id INT NOT NULL,
-        target_type VARCHAR(20) NOT NULL,
-        target_id INT NOT NULL,
-        reason VARCHAR(255) NOT NULL,
-        category VARCHAR(30) NOT NULL DEFAULT 'other',
-        status VARCHAR(20) NOT NULL DEFAULT 'open',
-        admin_note VARCHAR(255) DEFAULT NULL,
-        resolved_by INT DEFAULT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        resolved_at DATETIME DEFAULT NULL,
-        report_count INT DEFAULT 1,
-        last_reported_at DATETIME DEFAULT NULL,
-        rate_limited_until DATETIME DEFAULT NULL,
-        INDEX idx_reports_status_created (status, created_at),
-        INDEX idx_reports_target (target_type, target_id),
-        INDEX idx_reports_category (category)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS audit_log (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        admin_user_id INT NOT NULL,
-        action_type VARCHAR(80) NOT NULL,
-        target_type VARCHAR(30) NOT NULL,
-        target_id INT DEFAULT NULL,
-        details TEXT DEFAULT NULL,
-        admin_note VARCHAR(255) DEFAULT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_audit_created (created_at),
-        INDEX idx_audit_admin (admin_user_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS user_reports (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        report_id INT NOT NULL,
-        viewed_at DATETIME DEFAULT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_user_report (user_id, report_id),
-        KEY idx_user_id (user_id),
-        FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-    ensureTableColumn($pdo, 'reports', 'category', "VARCHAR(30) NOT NULL DEFAULT 'other' AFTER `reason`");
-    ensureTableColumn($pdo, 'reports', 'status', "VARCHAR(20) NOT NULL DEFAULT 'open' AFTER `category`");
-    ensureTableColumn($pdo, 'reports', 'admin_note', 'VARCHAR(255) DEFAULT NULL AFTER `status`');
-    ensureTableColumn($pdo, 'reports', 'resolved_by', 'INT DEFAULT NULL AFTER `admin_note`');
-    ensureTableColumn($pdo, 'reports', 'resolved_at', 'DATETIME DEFAULT NULL AFTER `created_at`');
-    ensureTableColumn($pdo, 'reports', 'report_count', 'INT DEFAULT 1 AFTER `resolved_at`');
-    ensureTableColumn($pdo, 'reports', 'last_reported_at', 'DATETIME DEFAULT NULL AFTER `report_count`');
-    ensureTableColumn($pdo, 'reports', 'rate_limited_until', 'DATETIME DEFAULT NULL AFTER `last_reported_at`');
-    ensureTableIndex($pdo, 'reports', 'idx_reports_status_created', 'INDEX `idx_reports_status_created` (`status`, `created_at`)');
-    ensureTableIndex($pdo, 'reports', 'idx_reports_target', 'INDEX `idx_reports_target` (`target_type`, `target_id`)');
-    ensureTableIndex($pdo, 'reports', 'idx_reports_category', 'INDEX `idx_reports_category` (`category`)');
-
-    ensureTableColumn($pdo, 'audit_log', 'admin_note', 'VARCHAR(255) DEFAULT NULL AFTER `details`');
-}
-
 function createContentReport(PDO $pdo, int $reporterUserId, string $targetType, int $targetId, string $reason, string $category = 'other'): array {
     $targetType = strtolower(trim($targetType));
     $reason = trim($reason);

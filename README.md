@@ -2,6 +2,7 @@
 
 FITSPIRATION
 
+
 ## Projekta apraksts
 
 Šis ir kvalifikācijas darba projekts PIKC "Rīgas Valsts tehnikums" repozitorijam. FITSPIRATION ir sociāla tīmekļa platforma modes un stila iedvesmai, kur lietotāji var publicēt pinus, veidot kolekcijas, komentēt, atzīmēt ar Patīk, sekot citiem lietotājiem un saņemt personalizētu satura plūsmu.
@@ -24,6 +25,7 @@ Projektā tiek izmantots:
 - XAMPP
 
 
+
 ## Izmantotie avoti
 
 1. [PHP Documentation](https://www.php.net/docs.php) - izmantots servera puses loģikai, sesijām un PDO darbam ar datubāzi.
@@ -33,3 +35,5 @@ Projektā tiek izmantots:
 3. [MySQL 8.0 Reference Manual](https://dev.mysql.com/doc/) - izmantots SQL vaicājumu, tabulu un indeksu veidošanai.
 
 4. [Font Awesome](https://fontawesome.com/) - izmantots interfeisa ikonām navigācijā un pogās.
+
+
