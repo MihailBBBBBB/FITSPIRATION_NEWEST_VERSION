@@ -40,7 +40,7 @@ if ($result && $result['is_admin'] == 1) {
                 <button class="login-btn header-action admin-btn" onclick="window.location.href=\'AdminPanel.php\'"><i class="fa-solid fa-shield-halved"></i><span>Admin</span></button>
                 <button class="login-btn header-action messages-btn" onclick="window.location.href=\'Messages.php\'"><i class="fa-solid fa-envelope"></i><span>Messages</span></button>
                 <button class="profile-pic" onclick="window.location.href=\'Profile.php\'"><i class="fa-solid fa-circle-user"></i></button>
-                <button class="login-btn header-action logout-btn" onclick="window.location.href=\'../includes/LogOut.inc.php\'"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+                <button class="login-btn header-action logout-btn" onclick="window.location.href=\'/includes/LogOut.inc.php\'"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
                 <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
         </header>
@@ -70,7 +70,7 @@ if ($result && $result['is_admin'] == 1) {
             <div class="buttons">
                 <button class="login-btn header-action messages-btn" onclick="window.location.href=\'Messages.php\'"><i class="fa-solid fa-envelope"></i><span>Messages</span></button>
                 <button class="profile-pic" onclick="window.location.href=\'Profile.php\'"><i class="fa-solid fa-circle-user"></i></button>
-                <button class="login-btn header-action logout-btn" onclick="window.location.href=\'../includes/LogOut.inc.php\'"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+                <button class="login-btn header-action logout-btn" onclick="window.location.href=\'/includes/LogOut.inc.php\'"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
                 <button class="translate-btn" id="translate-btn" onclick="window.translator?.toggleTranslation()">LV</button>
             </div>
         </header>
