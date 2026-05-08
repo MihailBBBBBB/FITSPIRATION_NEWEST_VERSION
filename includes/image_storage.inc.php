@@ -4,6 +4,35 @@ function getFitspirationImagesDirectory(): string {
     return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
 }
 
+function getFitspirationImagePublicPath(string $image): ?string {
+    $normalized = str_replace('\\', '/', trim($image));
+    if ($normalized === '') {
+        return null;
+    }
+
+    if (preg_match('#^(https?:)?//#i', $normalized) || str_starts_with($normalized, 'data:')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, '../images/')) {
+        return '/images/' . ltrim(substr($normalized, strlen('../images/')), '/');
+    }
+
+    if (str_starts_with($normalized, './images/')) {
+        return '/images/' . ltrim(substr($normalized, strlen('./images/')), '/');
+    }
+
+    if (str_starts_with($normalized, '/images/')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, 'images/')) {
+        return '/' . $normalized;
+    }
+
+    return '/images/' . ltrim($normalized, '/');
+}
+
 function buildFitspirationImageUrl(?string $image, string $relativePrefix = '../images/', string $default = '../images/no_image.jpg'): string {
     $image = trim((string) $image);
     if ($image === '') {
@@ -16,19 +45,25 @@ function buildFitspirationImageUrl(?string $image, string $relativePrefix = '../
         return $normalized;
     }
 
-    if (str_starts_with($normalized, '../') || str_starts_with($normalized, './')) {
-        return $normalized;
+    $publicPath = getFitspirationImagePublicPath($normalized);
+    if ($publicPath === null) {
+        return $default;
     }
 
-    if (str_starts_with($normalized, '/images/')) {
-        return '..' . $normalized;
+    if (preg_match('#^(https?:)?//#i', $publicPath) || str_starts_with($publicPath, 'data:')) {
+        return $publicPath;
     }
 
-    if (str_starts_with($normalized, 'images/')) {
-        return '../' . $normalized;
+    $absolutePath = dirname(__DIR__) . str_replace('/', DIRECTORY_SEPARATOR, $publicPath);
+    if (!is_file($absolutePath)) {
+        return $default;
     }
 
-    return $relativePrefix . ltrim($normalized, '/');
+    if (str_starts_with($publicPath, '/images/')) {
+        return $relativePrefix . ltrim(substr($publicPath, strlen('/images/')), '/');
+    }
+
+    return $default;
 }
 
 function describeFitspirationPathState(string $path): string {
