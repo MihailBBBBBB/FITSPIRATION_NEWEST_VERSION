@@ -64,8 +64,6 @@ function clampUtf8String(string $value, int $maxLength): string {
 }
 
 function ensurePublicOutfitCollection(PDO $pdo, int $userId, ?int $preferredCollectionId = null): int {
-    ensureCollectionCollaborationTables($pdo);
-
     if (($preferredCollectionId ?? 0) > 0) {
         $collectionStmt = $pdo->prepare(
             'SELECT c.collection_id, c.user_id, c.privacy
@@ -108,6 +106,7 @@ function ensurePublicOutfitCollection(PDO $pdo, int $userId, ?int $preferredColl
 
 try {
     ensureOutfitsTable($pdo);
+    ensureCollectionCollaborationTables($pdo);
 } catch (Throwable $e) {
     error_log('Error creating outfits table: ' . $e->getMessage());
     respondJson(['success' => false, 'error' => 'Database setup error'], 500);
