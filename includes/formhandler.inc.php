@@ -4,6 +4,18 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once 'csrf.inc.php';
 
+function isAtLeast13YearsOld(string $birthdate): bool {
+    $birthDate = DateTimeImmutable::createFromFormat('Y-m-d', $birthdate);
+    if (!$birthDate || $birthDate->format('Y-m-d') !== $birthdate) {
+        return false;
+    }
+
+    $today = new DateTimeImmutable('today');
+    $minimumBirthdate = $today->modify('-13 years');
+
+    return $birthDate <= $minimumBirthdate;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     requireValidCsrfToken();
     $email = trim($_POST["email"] ?? '');
@@ -17,6 +29,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         ];
         $_SESSION['registration_error'] = "All fields are required.";
         header("Location: ../HTML/Registration.php?error=missingfields");
+        exit();
+    }
+
+    if (!isAtLeast13YearsOld($birthdate)) {
+        $_SESSION['form_data'] = [
+            'email' => $email,
+            'birthdate' => $birthdate
+        ];
+        $_SESSION['registration_error'] = 'You must be at least 13 years old to register.';
+        header("Location: ../HTML/Registration.php?error=underage");
         exit();
     }
 

@@ -350,7 +350,7 @@ $initialBuilderPayload = [
                     <div class="save-outfit-section">
                         <input id="outfitNameInput" type="text" placeholder="Outfit name..." maxlength="120" value="<?php echo htmlspecialchars($editingOutfit['name'] ?? ($remixOutfit ? ('Remix: ' . $remixOutfit['name']) : ''), ENT_QUOTES); ?>">
                         <label class="publish-toggle" for="publishOutfitToggle">
-                            <input id="publishOutfitToggle" type="checkbox" <?php echo !isset($editingOutfit['isShared']) || $editingOutfit['isShared'] ? 'checked' : ''; ?>>
+                            <input id="publishOutfitToggle" type="checkbox" <?php echo !empty($editingOutfit['isShared']) ? 'checked' : ''; ?>>
                             <span>Publish as public outfit post</span>
                         </label>
                         <div id="publishCollectionGroup" class="control-group">

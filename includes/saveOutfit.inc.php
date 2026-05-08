@@ -51,6 +51,18 @@ require_once 'dbh.inc.php';
 require_once 'outfits_schema.inc.php';
 require_once 'collection_collaboration.inc.php';
 
+function clampUtf8String(string $value, int $maxLength): string {
+    if ($maxLength <= 0) {
+        return '';
+    }
+
+    if (function_exists('mb_substr')) {
+        return mb_substr($value, 0, $maxLength, 'UTF-8');
+    }
+
+    return substr($value, 0, $maxLength);
+}
+
 function ensurePublicOutfitCollection(PDO $pdo, int $userId, ?int $preferredCollectionId = null): int {
     ensureCollectionCollaborationTables($pdo);
 
@@ -243,11 +255,13 @@ try {
 
     if ($publishPost) {
         $publicCollectionId = ensurePublicOutfitCollection($pdo, (int) $_SESSION['user_id'], $publishCollectionId > 0 ? $publishCollectionId : null);
-        $link = 'outfit://' . $outfitId;
+        $link = clampUtf8String('outfit://' . $outfitId, 150);
+        $pinTitle = clampUtf8String($name, 50);
         $description = 'Outfit post from Outfit Builder';
         if ($remixSourceOutfitId > 0) {
             $description .= ' (Remix of #' . $remixSourceOutfitId . ')';
         }
+        $description = clampUtf8String($description, 300);
 
         $pinStmt = $pdo->prepare('SELECT id FROM pins WHERE user_id = ? AND link = ? LIMIT 1');
         $pinStmt->execute([(int) $_SESSION['user_id'], $link]);
@@ -255,10 +269,10 @@ try {
 
         if ($existingPinId > 0) {
             $updatePin = $pdo->prepare('UPDATE pins SET img = ?, title = ?, description = ?, collection_id = ? WHERE id = ? AND user_id = ?');
-            $updatePin->execute([$fileName, $name, $description, $publicCollectionId, $existingPinId, (int) $_SESSION['user_id']]);
+            $updatePin->execute([$fileName, $pinTitle, $description, $publicCollectionId, $existingPinId, (int) $_SESSION['user_id']]);
         } else {
             $insertPin = $pdo->prepare('INSERT INTO pins (img, title, description, link, collection_id, user_id) VALUES (?, ?, ?, ?, ?, ?)');
-            $insertPin->execute([$fileName, $name, $description, $link, $publicCollectionId, (int) $_SESSION['user_id']]);
+            $insertPin->execute([$fileName, $pinTitle, $description, $link, $publicCollectionId, (int) $_SESSION['user_id']]);
         }
     }
 
@@ -272,6 +286,20 @@ try {
     }
 
     respondJson(['success' => true, 'id' => $outfitId, 'mode' => $existingOutfit ? 'updated' : 'created']);
+} catch (RuntimeException $e) {
+    error_log('Error saving outfit: ' . $e->getMessage());
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    @unlink($filePath);
+    respondJson(['success' => false, 'error' => $e->getMessage()], 400);
+} catch (PDOException $e) {
+    error_log('Error saving outfit (PDO): ' . $e->getMessage());
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    @unlink($filePath);
+    respondJson(['success' => false, 'error' => 'Database error'], 500);
 } catch (Throwable $e) {
     error_log('Error saving outfit: ' . $e->getMessage());
     if ($pdo->inTransaction()) {

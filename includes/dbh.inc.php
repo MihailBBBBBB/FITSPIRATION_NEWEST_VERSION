@@ -1,5 +1,36 @@
 <?php
 
+function getFitspirationAppTimezone(): DateTimeZone {
+    static $timezone = null;
+
+    if ($timezone instanceof DateTimeZone) {
+        return $timezone;
+    }
+
+    $timezoneName = getenv('FITSPIRATION_APP_TIMEZONE');
+    if ($timezoneName === false || trim($timezoneName) === '') {
+        $timezoneName = 'Europe/Riga';
+    }
+
+    try {
+        $timezone = new DateTimeZone((string) $timezoneName);
+    } catch (Throwable $e) {
+        $timezone = new DateTimeZone('Europe/Riga');
+    }
+
+    return $timezone;
+}
+
+function getFitspirationMysqlTimezoneOffset(DateTimeZone $timezone): string {
+    $offsetSeconds = $timezone->getOffset(new DateTimeImmutable('now', $timezone));
+    $sign = $offsetSeconds >= 0 ? '+' : '-';
+    $absoluteSeconds = abs($offsetSeconds);
+    $hours = (int) floor($absoluteSeconds / 3600);
+    $minutes = (int) floor(($absoluteSeconds % 3600) / 60);
+
+    return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+}
+
 function parseFitspirationDatabaseUrl(string $databaseUrl): ?array {
     $parts = parse_url($databaseUrl);
     if ($parts === false || !isset($parts['host'])) {
@@ -67,6 +98,9 @@ function loadFitspirationEnv(string $envPath): void {
 
 loadFitspirationEnv(dirname(__DIR__) . '/.env');
 
+$appTimezone = getFitspirationAppTimezone();
+date_default_timezone_set($appTimezone->getName());
+
 $databaseUrl = getenv('FITSPIRATION_DB_URL');
 $databaseConfig = ($databaseUrl !== false && $databaseUrl !== '')
     ? parseFitspirationDatabaseUrl($databaseUrl)
@@ -88,6 +122,8 @@ try {
     $pdo = new PDO ($dsn, $dbusername, $dbpassword);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $timeZoneStmt = $pdo->prepare('SET time_zone = ?');
+    $timeZoneStmt->execute([getFitspirationMysqlTimezoneOffset($appTimezone)]);
 } catch (PDOException $e) {
     error_log(sprintf(
         'Database connection failed for host=%s port=%s db=%s user=%s: %s',

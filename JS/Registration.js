@@ -1,4 +1,16 @@
 document.getElementById('registrationForm').addEventListener('submit', function(event) {
+        function isAtLeast13YearsOld(dateString) {
+            const birthDate = new Date(dateString + 'T00:00:00');
+            if (Number.isNaN(birthDate.getTime())) {
+                return false;
+            }
+
+            const today = new Date();
+            const threshold = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+
+            return birthDate <= threshold;
+        }
+
         // Clear previous error messages
         document.getElementById('emailError').textContent = '';
         document.getElementById('passwordError').textContent = '';
@@ -30,8 +42,11 @@ document.getElementById('registrationForm').addEventListener('submit', function(
         if (!dob) {
             document.getElementById('dobError').textContent = 'Date of birth is required.';
             isValid = false;
-        } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
-            document.getElementById('dobError').textContent = 'Date of birth must be in the format yyyy-mm-dd.';
+        } else if (Number.isNaN(new Date(dob).getTime())) {
+            document.getElementById('dobError').textContent = 'Please choose a valid date of birth.';
+            isValid = false;
+        } else if (!isAtLeast13YearsOld(dob)) {
+            document.getElementById('dobError').textContent = 'You must be at least 13 years old to register.';
             isValid = false;
         }
 

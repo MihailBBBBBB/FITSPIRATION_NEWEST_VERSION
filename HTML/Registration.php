@@ -55,7 +55,7 @@
                 </div>
                 <div class="form-group">
                     <label for="dob">Date of birth</label>
-                    <input type="text" id="dob" placeholder="yyyy-mm-dd" name="birthdate"
+                    <input type="date" id="dob" name="birthdate" max="<?php echo date('Y-m-d', strtotime('-13 years')); ?>"
                            value="<?php echo isset($_SESSION['form_data']['birthdate']) ? htmlspecialchars($_SESSION['form_data']['birthdate']) : ''; ?>">
                     <span id="dobError" class="error-message"></span>
                 </div>
