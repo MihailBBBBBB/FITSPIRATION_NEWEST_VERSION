@@ -43,6 +43,8 @@ $error = $_GET['error'] ?? '';
                 <div class="server-error-message">Incorrect email or password. Please try again.</div>
             <?php elseif ($error === 'notloggedin'): ?>
                 <div class="server-error-message">Please log in to continue.</div>
+            <?php elseif ($error === 'banned'): ?>
+                <div class="server-error-message">This account has been banned.</div>
             <?php elseif ($error): ?>
                 <div class="server-error-message">Something went wrong. Please try again.</div>
             <?php endif; ?>

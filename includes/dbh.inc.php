@@ -31,6 +31,59 @@ function getFitspirationMysqlTimezoneOffset(DateTimeZone $timezone): string {
     return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
 }
 
+function isFitspirationJsonLikeRequest(): bool {
+    $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+    $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+    $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+
+    return str_contains($acceptHeader, 'application/json')
+        || $requestedWith === 'xmlhttprequest'
+        || str_ends_with($requestUri, '.inc.php');
+}
+
+function getFitspirationPublicScriptAllowlist(): array {
+    return [
+        'Main.php',
+        'LogIn.php',
+        'Registration.php',
+        'Login.inc.php',
+        'formhandler.inc.php',
+    ];
+}
+
+function canGuestAccessFitspirationRequest(): bool {
+    $scriptName = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    if ($scriptName === '') {
+        return false;
+    }
+
+    return in_array($scriptName, getFitspirationPublicScriptAllowlist(), true);
+}
+
+function respondToGuestAccessDenied(): void {
+    if (isFitspirationJsonLikeRequest()) {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error' => 'Please log in to continue.',
+            'redirect' => '/HTML/LogIn.php?error=notloggedin',
+        ]);
+        exit();
+    }
+
+    header('Location: /HTML/LogIn.php?error=notloggedin', true, 303);
+    exit();
+}
+
+function enforceFitspirationAuthenticatedAccess(): void {
+    if (isset($_SESSION['user_id']) || canGuestAccessFitspirationRequest()) {
+        return;
+    }
+
+    respondToGuestAccessDenied();
+}
+
 function respondToBannedSession(): void {
     if (session_status() === PHP_SESSION_ACTIVE) {
         $_SESSION = [];
@@ -41,14 +94,7 @@ function respondToBannedSession(): void {
         session_destroy();
     }
 
-    $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
-    $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
-    $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
-    $isJsonRequest = str_contains($acceptHeader, 'application/json')
-        || $requestedWith === 'xmlhttprequest'
-        || str_ends_with($requestUri, '.inc.php');
-
-    if ($isJsonRequest) {
+    if (isFitspirationJsonLikeRequest()) {
         http_response_code(403);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
@@ -151,6 +197,7 @@ loadFitspirationEnv(dirname(__DIR__) . '/.env');
 
 $appTimezone = getFitspirationAppTimezone();
 date_default_timezone_set($appTimezone->getName());
+enforceFitspirationAuthenticatedAccess();
 
 $databaseUrl = getenv('FITSPIRATION_DB_URL');
 $databaseConfig = ($databaseUrl !== false && $databaseUrl !== '')
