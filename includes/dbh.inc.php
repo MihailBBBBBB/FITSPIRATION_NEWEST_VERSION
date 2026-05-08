@@ -31,6 +31,57 @@ function getFitspirationMysqlTimezoneOffset(DateTimeZone $timezone): string {
     return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
 }
 
+function respondToBannedSession(): void {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'] ?? '/', $params['domain'] ?? '', (bool) ($params['secure'] ?? false), (bool) ($params['httponly'] ?? true));
+        }
+        session_destroy();
+    }
+
+    $acceptHeader = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+    $requestedWith = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+    $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+    $isJsonRequest = str_contains($acceptHeader, 'application/json')
+        || $requestedWith === 'xmlhttprequest'
+        || str_ends_with($requestUri, '.inc.php');
+
+    if ($isJsonRequest) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'error' => 'Your account has been banned.',
+            'redirect' => '/HTML/LogIn.php?error=banned',
+        ]);
+        exit();
+    }
+
+    header('Location: /HTML/LogIn.php?error=banned', true, 303);
+    exit();
+}
+
+function enforceFitspirationBanStatus(PDO $pdo): void {
+    if (session_status() !== PHP_SESSION_ACTIVE || !isset($_SESSION['user_id'])) {
+        return;
+    }
+
+    $userId = (int) $_SESSION['user_id'];
+    if ($userId <= 0) {
+        return;
+    }
+
+    $stmt = $pdo->prepare('SELECT banned FROM registration WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user || !empty($user['banned'])) {
+        respondToBannedSession();
+    }
+}
+
 function parseFitspirationDatabaseUrl(string $databaseUrl): ?array {
     $parts = parse_url($databaseUrl);
     if ($parts === false || !isset($parts['host'])) {
@@ -124,6 +175,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     $timeZoneStmt = $pdo->prepare('SET time_zone = ?');
     $timeZoneStmt->execute([getFitspirationMysqlTimezoneOffset($appTimezone)]);
+    enforceFitspirationBanStatus($pdo);
 } catch (PDOException $e) {
     error_log(sprintf(
         'Database connection failed for host=%s port=%s db=%s user=%s: %s',

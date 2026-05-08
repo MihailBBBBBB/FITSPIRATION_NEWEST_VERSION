@@ -23,6 +23,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
+            if (!empty($user['banned'])) {
+                header("Location: ../HTML/LogIn.php?error=banned");
+                exit();
+            }
+
             $storedPassword = $user['password'] ?? '';
             $passwordInfo = password_get_info($storedPassword);
             $isPasswordValid = false;
