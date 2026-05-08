@@ -27,6 +27,8 @@
     var saveAsNewBtn = document.getElementById('saveAsNewBtn');
     var outfitNameInput = document.getElementById('outfitNameInput');
     var publishOutfitToggle = document.getElementById('publishOutfitToggle');
+    var publishCollectionGroup = document.getElementById('publishCollectionGroup');
+    var publishCollectionSelect = document.getElementById('publishCollectionSelect');
     var selectedMetaSummary = document.getElementById('selectedMetaSummary');
     var suggestOutfitBtn = document.getElementById('suggestOutfitBtn');
     var matchWhyList = document.getElementById('matchWhyList');
@@ -344,6 +346,20 @@
 
         if (remixModeBadge) {
             remixModeBadge.classList.toggle('hidden', !remixSource);
+        }
+
+        updatePublishCollectionUi();
+    }
+
+    function updatePublishCollectionUi() {
+        if (!publishCollectionGroup || !publishOutfitToggle) {
+            return;
+        }
+
+        var isPublishing = !!publishOutfitToggle.checked;
+        publishCollectionGroup.classList.toggle('hidden', !isPublishing);
+        if (publishCollectionSelect) {
+            publishCollectionSelect.disabled = !isPublishing;
         }
     }
 
@@ -2038,6 +2054,9 @@
         var builderState = serializeOutfitState();
         var targetOutfitId = saveMode === 'fork' ? null : currentOutfitId;
         var publishPost = publishOutfitToggle ? !!publishOutfitToggle.checked : true;
+        var publishCollectionId = publishPost && publishCollectionSelect && publishCollectionSelect.value
+            ? parseInt(publishCollectionSelect.value, 10)
+            : null;
 
         saveOutfitBtn.disabled = true;
         if (saveAsNewBtn) {
@@ -2076,6 +2095,7 @@
                     outfit_id: targetOutfitId,
                     builder_state: builderState,
                     publish_post: publishPost,
+                    publish_collection_id: publishCollectionId,
                     remix_source_outfit_id: remixSource && remixSource.outfitId ? Number(remixSource.outfitId) : null
                 })
             });
@@ -2374,6 +2394,10 @@
         saveOutfit('default');
     });
 
+    if (publishOutfitToggle) {
+        publishOutfitToggle.addEventListener('change', updatePublishCollectionUi);
+    }
+
     if (saveAsNewBtn) {
         saveAsNewBtn.addEventListener('click', function() {
             saveOutfit('fork');
@@ -2476,6 +2500,7 @@
 
     renderSlotLayer();
     updateSaveButtonState();
+    updatePublishCollectionUi();
     if (initialBuilderConfig.name && outfitNameInput && !outfitNameInput.value) {
         outfitNameInput.value = initialBuilderConfig.name;
     }

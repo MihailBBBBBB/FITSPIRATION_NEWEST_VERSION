@@ -323,8 +323,10 @@ include_once "../includes/AdminPanel.inc.php";
                 </div>
 
                 <div class="bulk-actions" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.04); border-radius: 8px; display: none;" id="bulkActionsPanel">
-                    <form method="POST" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <form method="POST" id="bulkReportActionsForm" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <?php echo csrfInput(); ?>
+                        <input type="hidden" name="admin_tab" value="reports">
+                        <div id="bulkReportSelections"></div>
                         <select name="bulk_action" required style="padding: 0.4rem 0.6rem; background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 0.75rem;">
                             <option value="">Select action...</option>
                             <option value="resolve">Mark as Action Taken</option>

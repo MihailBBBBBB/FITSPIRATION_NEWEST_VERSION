@@ -188,3 +188,46 @@ function getUserCreatableCollections(PDO $pdo, int $userId): array {
 
     return $rows;
 }
+
+function getUserCreatablePublicCollections(PDO $pdo, int $userId): array {
+    ensureCollectionCollaborationTables($pdo);
+
+    if ($userId <= 0) {
+        return [];
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT DISTINCT c.collection_id,
+                c.title,
+                c.user_id,
+                c.privacy,
+                COALESCE(cc.role, "owner") AS access_role
+         FROM collections c
+         LEFT JOIN collection_collaborators cc
+           ON cc.collection_id = c.collection_id AND cc.user_id = :user_id
+         WHERE c.privacy = "Public"
+           AND (
+                c.user_id = :owner_user_id
+                OR (cc.user_id = :collab_user_id AND cc.role = "editor")
+           )
+         ORDER BY c.collection_id DESC'
+    );
+    $stmt->execute([
+        'user_id' => $userId,
+        'owner_user_id' => $userId,
+        'collab_user_id' => $userId,
+    ]);
+
+    $rows = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $role = ((int) ($row['user_id'] ?? 0) === $userId) ? 'owner' : normalizeCollectionRole((string) ($row['access_role'] ?? 'editor'));
+        $rows[] = [
+            'collection_id' => (int) ($row['collection_id'] ?? 0),
+            'title' => (string) ($row['title'] ?? 'Collection'),
+            'access_role' => $role,
+            'privacy' => (string) ($row['privacy'] ?? 'Public'),
+        ];
+    }
+
+    return $rows;
+}

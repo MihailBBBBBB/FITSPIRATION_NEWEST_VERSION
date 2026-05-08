@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once '../includes/csrf.inc.php';
 require_once '../includes/dbh.inc.php';
 require_once '../includes/outfits_schema.inc.php';
+require_once '../includes/collection_collaboration.inc.php';
 include_once '../JS/headerFooter.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -27,6 +28,7 @@ $likedPinsForBuilder = [];
 $editingOutfit = null;
 $builderLoadError = '';
 $remixOutfit = null;
+$publishCollections = [];
 
 try {
     $likedPinsStmt = $pdo->prepare(
@@ -60,13 +62,26 @@ try {
 }
 
 try {
+    ensureCollectionCollaborationTables($pdo);
+    $publishCollections = getUserCreatablePublicCollections($pdo, (int) $_SESSION['user_id']);
+
     ensureOutfitsTable($pdo);
 
     $requestedOutfitId = isset($_GET['outfit_id']) ? (int) $_GET['outfit_id'] : 0;
     $requestedRemixOutfitId = isset($_GET['remix_outfit_id']) ? (int) $_GET['remix_outfit_id'] : 0;
     if ($requestedOutfitId > 0) {
         $outfitStmt = $pdo->prepare(
-            'SELECT id, name, img, builder_state,
+                        'SELECT id, name, img, builder_state,
+                                        (
+                                                SELECT p.collection_id
+                                                FROM pins p
+                                                INNER JOIN collections c ON c.collection_id = p.collection_id
+                                                WHERE p.user_id = outfits.user_id
+                                                    AND p.link = CONCAT("outfit://", outfits.id)
+                                                    AND c.privacy = "Public"
+                                                ORDER BY p.id DESC
+                                                LIMIT 1
+                                        ) AS shared_collection_id,
                     EXISTS(
                         SELECT 1
                         FROM pins p
@@ -90,6 +105,7 @@ try {
                     'name' => (string) ($outfitRow['name'] ?? 'My Outfit'),
                     'img' => (string) ($outfitRow['img'] ?? ''),
                     'isShared' => !empty($outfitRow['is_shared']),
+                    'sharedCollectionId' => !empty($outfitRow['shared_collection_id']) ? (int) $outfitRow['shared_collection_id'] : null,
                     'builderState' => $decodedState,
                 ];
             } else {
@@ -138,6 +154,7 @@ $initialBuilderPayload = [
     'outfitId' => $editingOutfit['id'] ?? null,
     'name' => $editingOutfit['name'] ?? ($remixOutfit ? ('Remix: ' . $remixOutfit['name']) : ''),
     'isShared' => !empty($editingOutfit['isShared']),
+    'sharedCollectionId' => $editingOutfit['sharedCollectionId'] ?? null,
     'builderState' => $editingOutfit['builderState'] ?? ($remixOutfit['builderState'] ?? null),
     'remixSource' => $remixOutfit ? [
         'outfitId' => $remixOutfit['id'],
@@ -336,6 +353,20 @@ $initialBuilderPayload = [
                             <input id="publishOutfitToggle" type="checkbox" <?php echo !isset($editingOutfit['isShared']) || $editingOutfit['isShared'] ? 'checked' : ''; ?>>
                             <span>Publish as public outfit post</span>
                         </label>
+                        <div id="publishCollectionGroup" class="control-group">
+                            <label for="publishCollectionSelect">Public collection</label>
+                            <select id="publishCollectionSelect">
+                                <option value="">Outfit Posts (auto-create if needed)</option>
+                                <?php foreach ($publishCollections as $collection): ?>
+                                    <option value="<?php echo (int) $collection['collection_id']; ?>" <?php echo (($editingOutfit['sharedCollectionId'] ?? null) === (int) $collection['collection_id']) ? 'selected' : ''; ?>>
+                                        <?php
+                                        $roleLabel = (($collection['access_role'] ?? 'owner') === 'editor') ? 'Editor' : 'Owner';
+                                        echo htmlspecialchars($collection['title'] . ' (' . $roleLabel . ')');
+                                        ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div class="save-actions-row">
                             <button id="saveOutfitBtn" type="button" class="primary"><?php echo $editingOutfit ? 'Save Changes' : 'Save to Profile'; ?></button>
                             <button id="saveAsNewBtn" type="button" class="secondary<?php echo $editingOutfit ? '' : ' hidden'; ?>">Save as New Outfit</button>

@@ -49,8 +49,37 @@ requireValidCsrfToken(true);
 
 require_once 'dbh.inc.php';
 require_once 'outfits_schema.inc.php';
+require_once 'collection_collaboration.inc.php';
 
-function ensurePublicOutfitCollection(PDO $pdo, int $userId): int {
+function ensurePublicOutfitCollection(PDO $pdo, int $userId, ?int $preferredCollectionId = null): int {
+    ensureCollectionCollaborationTables($pdo);
+
+    if (($preferredCollectionId ?? 0) > 0) {
+        $collectionStmt = $pdo->prepare(
+            'SELECT c.collection_id, c.user_id, c.privacy
+             FROM collections c
+             WHERE c.collection_id = ?
+             LIMIT 1'
+        );
+        $collectionStmt->execute([(int) $preferredCollectionId]);
+        $collection = $collectionStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$collection) {
+            throw new RuntimeException('Selected collection was not found.');
+        }
+
+        $accessRole = resolveCollectionAccessRole($pdo, (int) $collection['collection_id'], (int) ($collection['user_id'] ?? 0), $userId);
+        if (!canUserEditCollectionWithRole($accessRole)) {
+            throw new RuntimeException('You cannot add posts to the selected collection.');
+        }
+
+        if ((string) ($collection['privacy'] ?? '') !== 'Public') {
+            throw new RuntimeException('Please choose a public collection for a public outfit post.');
+        }
+
+        return (int) $collection['collection_id'];
+    }
+
     $existing = $pdo->prepare('SELECT collection_id FROM collections WHERE user_id = ? AND privacy = "Public" ORDER BY collection_id ASC LIMIT 1');
     $existing->execute([$userId]);
     $collectionId = (int) $existing->fetchColumn();
@@ -83,6 +112,7 @@ $name = isset($input['name']) ? trim($input['name']) : 'My Outfit';
 $outfitId = isset($input['outfit_id']) ? (int) $input['outfit_id'] : 0;
 $builderState = $input['builder_state'] ?? null;
 $publishPost = !empty($input['publish_post']);
+$publishCollectionId = isset($input['publish_collection_id']) ? (int) $input['publish_collection_id'] : 0;
 $remixSourceOutfitId = isset($input['remix_source_outfit_id']) ? (int) $input['remix_source_outfit_id'] : 0;
 $name = substr(htmlspecialchars($name, ENT_QUOTES, 'UTF-8'), 0, 255);
 if ($name === '') {
@@ -212,7 +242,7 @@ try {
     }
 
     if ($publishPost) {
-        $publicCollectionId = ensurePublicOutfitCollection($pdo, (int) $_SESSION['user_id']);
+        $publicCollectionId = ensurePublicOutfitCollection($pdo, (int) $_SESSION['user_id'], $publishCollectionId > 0 ? $publishCollectionId : null);
         $link = 'outfit://' . $outfitId;
         $description = 'Outfit post from Outfit Builder';
         if ($remixSourceOutfitId > 0) {
