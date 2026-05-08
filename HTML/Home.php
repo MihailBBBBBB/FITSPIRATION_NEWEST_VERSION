@@ -172,7 +172,7 @@ include_once '../JS/headerFooter.php';
                                             <?php foreach ($suggestedUsers as $suggestedUser): ?>
                                                 <li>
                                                     <a href="Profile.php?user_id=<?php echo (int) $suggestedUser['id']; ?>">
-                                                        <img src="<?php echo !empty($suggestedUser['img']) ? '../images/' . htmlspecialchars($suggestedUser['img']) : '../images/no_image.jpg'; ?>" alt="<?php echo htmlspecialchars($suggestedUser['username']); ?>">
+                                                        <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($suggestedUser['img'] ?? '')); ?>" alt="<?php echo htmlspecialchars($suggestedUser['username']); ?>">
                                                         <span class="no-translate" data-user-content="true"><?php echo htmlspecialchars($suggestedUser['username']); ?></span>
                                                     </a>
                                                 </li>
@@ -195,17 +195,17 @@ include_once '../JS/headerFooter.php';
                             <?php foreach ($pins1 as $pin): ?>
                                 <div class="pin-item" data-pin-id="<?php echo htmlspecialchars($pin['id'] ?? ''); ?>">
                                     <img 
-                                    src="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>" 
+                                    src="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>" 
                                     alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>" 
                                     class="pin-image pin-open-modal" 
-                                    data-image="<?php echo htmlspecialchars($pin['img'] ? '../images/' . $pin['img'] : '../images/no_image.jpg'); ?>"
+                                    data-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>"
                                     data-title="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
                                     data-pin-id="<?php echo htmlspecialchars($pin['id'] ?? ''); ?>"
                                     data-like-count="<?php echo htmlspecialchars($pin['like_count']); ?>"
                                     data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                     data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                     data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                    data-creator-img="<?php echo $pin['creator_img'] ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
+                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
                                     data-outfit-id="<?php echo !empty($pin['outfit_post_id']) ? (int) $pin['outfit_post_id'] : ''; ?>"
                                     >
                                     <div class="pin-info">
@@ -254,7 +254,7 @@ include_once '../JS/headerFooter.php';
                                         </div>
                                         <div class="modal-details">
                                             <div class="modal-creator-row">
-                                                <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars($modal_pin_data['creator_img'] ?? '../images/no_image.jpg'); ?>" alt="Creator">
+                                                <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars(buildFitspirationImageUrl($modal_pin_data['creator_img'] ?? '')); ?>" alt="Creator">
                                                 <div>
                                                     <?php
                                                     $modal_creator_href = '#';
@@ -291,7 +291,7 @@ include_once '../JS/headerFooter.php';
                                                     <?php if (!empty($comments)): ?>
                                                         <?php foreach ($comments as $comment): ?>
                                                             <li>
-                                                                <img src="<?php echo isset($comment['user_img']) && $comment['user_img'] ? '../images/' . htmlspecialchars($comment['user_img']) : '../images/no_image.jpg'; ?>" alt="User">
+                                                                <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($comment['user_img'] ?? '')); ?>" alt="User">
                                                                 <?php echo isset($comment['username']) ? htmlspecialchars($comment['username']) : 'Unknown'; ?>: <?php echo isset($comment['comment']) ? htmlspecialchars($comment['comment']) : ''; ?>
                                                                 <?php
                                                                 $user_can_delete = false;

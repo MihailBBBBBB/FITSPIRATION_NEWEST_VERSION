@@ -6,6 +6,7 @@ include_once '../includes/likes.inc.php';
 include_once '../includes/csrf.inc.php';
 include_once '../includes/discovery_filters.inc.php';
 include_once '../includes/visual_similarity.inc.php';
+include_once '../includes/image_storage.inc.php';
 
 $is_ajax_request = (
     (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')

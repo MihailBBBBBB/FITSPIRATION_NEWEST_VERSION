@@ -37,7 +37,7 @@ include_once '../JS/headerFooter.php';
                 <div class="profile-header">
                     <div class="profile-header-copy">
                         <p class="profile-eyebrow">Personal Space</p>
-                    <img src="<?php echo $users['img'] ? '../images/' . htmlspecialchars($users['img']) : '../images/no_image.jpg'; ?>" 
+                    <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($users['img'] ?? '')); ?>" 
                     alt="Profile" 
                     class="profile-avatar" 
                     onclick="<?php echo isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id ? 'openAvatarModal()' : ''; ?>"
@@ -197,17 +197,17 @@ include_once '../JS/headerFooter.php';
                                     <?php foreach ($pins as $pin): ?>
                                         <div class="pin-item" data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>">
                                             <img
-                                            src="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>"
+                                            src="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>"
                                             alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
                                             class="pin-image"
-                                            data-image="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>"
+                                            data-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>"
                                             data-title="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
                                             data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>"
                                             data-like-count="<?php echo htmlspecialchars($pin['like_count']); ?>"
                                             data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                             data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                             data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                            data-creator-img="<?php echo $pin['creator_img'] ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
+                                            data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
                                             >
                                             <?php if (!empty($pin['id']) && isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
                                                 <span class="delete-cross"
@@ -279,7 +279,7 @@ include_once '../JS/headerFooter.php';
                                                                 <?php if (!empty($comments)): ?>
                                                                     <?php foreach ($comments as $comment): ?>
                                                                         <li>
-                                                                            <img src="<?php echo isset($comment['user_img']) && $comment['user_img'] ? '../images/' . htmlspecialchars($comment['user_img']) : '../images/no_image.jpg'; ?>" alt="User">
+                                                                            <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($comment['user_img'] ?? '')); ?>" alt="User">
                                                                             <?php echo isset($comment['username']) ? htmlspecialchars($comment['username']) : 'Unknown'; ?>: <?php echo isset($comment['comment']) ? htmlspecialchars($comment['comment']) : ''; ?>
                                                                             <?php
                                                                             $user_can_delete = false;
@@ -370,7 +370,7 @@ include_once '../JS/headerFooter.php';
                                         <?php endif; ?>
                                         <a href="collectionDetails.php?collection_id=<?php echo htmlspecialchars($collection['collection_id'] ?? ''); ?>" class="collection-link">
                                             <img 
-                                            src="<?php echo $collection['img'] ? '../images/' . htmlspecialchars($collection['img']) : '../images/no_image.jpg'; ?>" 
+                                            src="<?php echo htmlspecialchars(buildFitspirationImageUrl($collection['img'] ?? '')); ?>" 
                                             alt="<?php echo htmlspecialchars($collection['title'] ?? 'Collection'); ?> Collection" 
                                             class="pin-image"
                                             >
@@ -434,14 +434,14 @@ include_once '../JS/headerFooter.php';
                                                     <a href="../HTML/OutfitBuilder.php?outfit_id=<?php echo (int) $outfit['id']; ?>" class="outfit-edit-link">
                                                         <span class="outfit-edit-badge">Edit Outfit</span>
                                                         <img
-                                                            src="<?php echo '../images/' . htmlspecialchars($outfit['img']); ?>"
+                                                            src="<?php echo htmlspecialchars(buildFitspirationImageUrl($outfit['img'] ?? '')); ?>"
                                                             alt="<?php echo htmlspecialchars($outfit['name']); ?>"
                                                             class="pin-image outfit-preview-image"
                                                         >
                                                     </a>
                                                 <?php else: ?>
                                                     <img
-                                                        src="<?php echo '../images/' . htmlspecialchars($outfit['img']); ?>"
+                                                        src="<?php echo htmlspecialchars(buildFitspirationImageUrl($outfit['img'] ?? '')); ?>"
                                                         alt="<?php echo htmlspecialchars($outfit['name']); ?>"
                                                         class="pin-image outfit-preview-image"
                                                     >
@@ -485,17 +485,17 @@ include_once '../JS/headerFooter.php';
                                             <?php foreach ($liked_pins as $pin): ?>
                                                 <div class="pin-item" data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>">
                                                     <img 
-                                                    src="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>" 
+                                                    src="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>" 
                                                     alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>" 
                                                     class="pin-image"
-                                                    data-image="<?php echo $pin['img'] ? '../images/' . htmlspecialchars($pin['img']) : '../images/no_image.jpg'; ?>"
+                                                    data-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>"
                                                     data-title="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
                                                     data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>"
                                                     data-like-count="<?php echo htmlspecialchars($pin['like_count']); ?>"
                                                     data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                                     data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                                     data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                                    data-creator-img="<?php echo $pin['creator_img'] ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
+                                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
                                                     >
                                                     <div class="pin-info">
                                                         <h3 class="pin-title"><?php echo htmlspecialchars($pin['title'] ?? 'Untitled'); ?></h3>

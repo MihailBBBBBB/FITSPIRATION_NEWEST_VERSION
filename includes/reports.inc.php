@@ -41,6 +41,55 @@ function ensureTableIndex(PDO $pdo, string $tableName, string $indexName, string
     }
 }
 
+function ensureModerationTables(PDO $pdo): void {
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS reports (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            reporter_user_id INT NOT NULL,
+            target_type VARCHAR(32) NOT NULL,
+            target_id INT NOT NULL,
+            reason VARCHAR(255) NOT NULL,
+            category VARCHAR(32) NOT NULL DEFAULT "other",
+            status VARCHAR(32) NOT NULL DEFAULT "open",
+            rate_limited_until DATETIME NULL,
+            resolved_by INT NULL,
+            resolved_at DATETIME NULL,
+            admin_note VARCHAR(255) NOT NULL DEFAULT "",
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS audit_log (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            admin_user_id INT NOT NULL,
+            action_type VARCHAR(64) NOT NULL,
+            target_type VARCHAR(32) NOT NULL,
+            target_id INT NULL,
+            details TEXT NOT NULL,
+            admin_note VARCHAR(255) NOT NULL DEFAULT "",
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+    );
+
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS user_reports (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            report_id INT NOT NULL,
+            viewed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+    );
+
+    ensureTableIndex($pdo, 'reports', 'idx_reports_target', 'INDEX idx_reports_target (target_type, target_id)');
+    ensureTableIndex($pdo, 'reports', 'idx_reports_status', 'INDEX idx_reports_status (status)');
+    ensureTableIndex($pdo, 'reports', 'idx_reports_reporter', 'INDEX idx_reports_reporter (reporter_user_id)');
+    ensureTableIndex($pdo, 'audit_log', 'idx_audit_admin', 'INDEX idx_audit_admin (admin_user_id)');
+    ensureTableIndex($pdo, 'audit_log', 'idx_audit_target', 'INDEX idx_audit_target (target_type, target_id)');
+    ensureTableIndex($pdo, 'user_reports', 'uniq_user_report', 'UNIQUE INDEX uniq_user_report (user_id, report_id)');
+}
+
 function createContentReport(PDO $pdo, int $reporterUserId, string $targetType, int $targetId, string $reason, string $category = 'other'): array {
     $targetType = strtolower(trim($targetType));
     $reason = trim($reason);

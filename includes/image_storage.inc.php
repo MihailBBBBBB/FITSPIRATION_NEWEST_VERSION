@@ -4,6 +4,33 @@ function getFitspirationImagesDirectory(): string {
     return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
 }
 
+function buildFitspirationImageUrl(?string $image, string $relativePrefix = '../images/', string $default = '../images/no_image.jpg'): string {
+    $image = trim((string) $image);
+    if ($image === '') {
+        return $default;
+    }
+
+    $normalized = str_replace('\\', '/', $image);
+
+    if (preg_match('#^(https?:)?//#i', $normalized) || str_starts_with($normalized, 'data:')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, '../') || str_starts_with($normalized, './')) {
+        return $normalized;
+    }
+
+    if (str_starts_with($normalized, '/images/')) {
+        return '..' . $normalized;
+    }
+
+    if (str_starts_with($normalized, 'images/')) {
+        return '../' . $normalized;
+    }
+
+    return $relativePrefix . ltrim($normalized, '/');
+}
+
 function describeFitspirationPathState(string $path): string {
     clearstatcache(true, $path);
 
