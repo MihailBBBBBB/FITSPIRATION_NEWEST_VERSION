@@ -174,8 +174,7 @@ function searchUsers(query) {
                 const safeUsername = escapeHtml(user.username || 'User');
                 const encodedUsername = encodeURIComponent(user.username || 'User');
                 const avatarName = (user.img || '').replace(/[^a-zA-Z0-9._-]/g, '');
-                const initials = String(user.username || 'U').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => part.charAt(0).toUpperCase()).join('') || 'U';
-                const avatarSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1f2937"/><stop offset="100%" stop-color="#111827"/></linearGradient></defs><rect width="160" height="160" rx="80" fill="url(#g)"/><circle cx="80" cy="60" r="28" fill="rgba(255,255,255,0.18)"/><path d="M36 138c7-26 27-40 44-40s37 14 44 40" fill="rgba(255,255,255,0.18)"/><text x="80" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">${initials}</text></svg>`)}`;
+                const avatarSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="80" fill="#e5e7eb"/><circle cx="80" cy="58" r="24" fill="#9ca3af"/><path d="M34 136c8-24 28-38 46-38s38 14 46 38" fill="#9ca3af"/></svg>`)}`;
                 const avatarSrc = avatarName ? `../images/${avatarName}` : avatarSvg;
                 return `
                     <button type="button" class="search-result-item" onclick="startChat(${user.id}, decodeURIComponent('${encodedUsername}'))">
