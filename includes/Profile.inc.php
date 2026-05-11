@@ -10,7 +10,7 @@ include_once '../includes/likes.inc.php';
 include_once '../includes/csrf.inc.php';
 include_once '../includes/outfits_schema.inc.php';
 include_once '../includes/collection_collaboration.inc.php';
-include_once '../includes/image_storage.inc.php';
+require_once __DIR__ . '/image_storage.inc.php';
 
 ensureModerationTables($pdo);
 ensureCollectionCollaborationTables($pdo);
@@ -50,7 +50,7 @@ $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'date_desc';
 error_log('Received sort: ' . $sort);
 
 $current_user_name = 'You';
-$current_user_image = '../images/no_image.jpg';
+$current_user_image = buildFitspirationDefaultAvatarDataUrl($current_user_name);
 if ($session_user_id) {
     try {
         $currentUserStmt = $pdo->prepare('SELECT username, img FROM registration WHERE id = ? LIMIT 1');
@@ -60,9 +60,7 @@ if ($session_user_id) {
             if (!empty($currentUser['username'])) {
                 $current_user_name = $currentUser['username'];
             }
-            if (!empty($currentUser['img'])) {
-                $current_user_image = '../images/' . htmlspecialchars($currentUser['img']);
-            }
+            $current_user_image = buildFitspirationAvatarUrl($currentUser['img'] ?? '', $current_user_name);
         }
     } catch (PDOException $e) {
         error_log('Error fetching current user profile: ' . $e->getMessage());

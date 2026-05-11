@@ -66,13 +66,13 @@ try {
 
                     <div class="intro-hero-grid" aria-hidden="true">
                         <article class="intro-shot tall">
-                            <img src="../images/Streetwear.jpg" alt="Streetwear inspiration">
+                            <img src="../assets/main/Streetwear.jpg" alt="Streetwear inspiration">
                         </article>
                         <article class="intro-shot">
-                            <img src="../images/Old_money.jpg" alt="Old money style">
+                            <img src="../assets/main/Old_money.jpg" alt="Old money style">
                         </article>
                         <article class="intro-shot wide">
-                            <img src="../images/Accessories.jpg" alt="Accessories and details">
+                            <img src="../assets/main/Accessories.jpg" alt="Accessories and details">
                         </article>
                     </div>
                 </section>

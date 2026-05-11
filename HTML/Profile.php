@@ -1,6 +1,7 @@
 <?php
 session_start();
 $sort = isset($_GET['sort']) ? trim($_GET['sort']) : 'date_desc';
+require_once '../includes/image_storage.inc.php';
 include_once '../includes/Profile.inc.php';
 include_once '../JS/headerFooter.php';
 
@@ -37,7 +38,7 @@ include_once '../JS/headerFooter.php';
                 <div class="profile-header">
                     <div class="profile-header-copy">
                         <p class="profile-eyebrow">Personal Space</p>
-                    <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($users['img'] ?? '')); ?>" 
+                    <img src="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($users['img'] ?? '', (string) ($users['username'] ?? 'User'))); ?>" 
                     alt="Profile" 
                     class="profile-avatar" 
                     onclick="<?php echo isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id ? 'openAvatarModal()' : ''; ?>"
@@ -207,7 +208,7 @@ include_once '../JS/headerFooter.php';
                                             data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                             data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                             data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                            data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
+                                            data-creator-img="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($pin['creator_img'] ?? '', (string) ($pin['creator_name'] ?? 'User'))); ?>"
                                             >
                                             <?php if (!empty($pin['id']) && isset($_SESSION['user_id']) && $_SESSION['user_id'] == $view_user_id): ?>
                                                 <span class="delete-cross"

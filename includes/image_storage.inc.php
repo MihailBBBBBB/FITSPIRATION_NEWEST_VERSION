@@ -33,6 +33,65 @@ function getFitspirationImagePublicPath(string $image): ?string {
     return '/images/' . ltrim($normalized, '/');
 }
 
+function buildFitspirationDefaultAvatarDataUrl(string $seed = ''): string {
+    $normalizedSeed = trim($seed);
+    $initials = 'U';
+    if ($normalizedSeed !== '') {
+        $parts = preg_split('/\s+/', $normalizedSeed) ?: [];
+        $letters = '';
+        foreach ($parts as $part) {
+            $part = trim((string) $part);
+            if ($part === '') {
+                continue;
+            }
+
+            $letters .= function_exists('mb_substr')
+                ? mb_strtoupper(mb_substr($part, 0, 1, 'UTF-8'), 'UTF-8')
+                : strtoupper(substr($part, 0, 1));
+
+            if (strlen($letters) >= 2) {
+                break;
+            }
+        }
+
+        if ($letters !== '') {
+            $initials = $letters;
+        }
+    }
+
+    $palette = [
+        ['#1f2937', '#111827'],
+        ['#0f766e', '#134e4a'],
+        ['#7c2d12', '#9a3412'],
+        ['#1d4ed8', '#1e3a8a'],
+        ['#be185d', '#831843'],
+    ];
+    $paletteIndex = abs(crc32($normalizedSeed !== '' ? $normalizedSeed : 'fitspiration-default-avatar')) % count($palette);
+    [$startColor, $endColor] = $palette[$paletteIndex];
+
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Default profile avatar">'
+        . '<defs><linearGradient id="avatarGradient" x1="0" y1="0" x2="1" y2="1">'
+        . '<stop offset="0%" stop-color="' . $startColor . '"/>'
+        . '<stop offset="100%" stop-color="' . $endColor . '"/>'
+        . '</linearGradient></defs>'
+        . '<rect width="160" height="160" rx="80" fill="url(#avatarGradient)"/>'
+        . '<circle cx="80" cy="60" r="28" fill="rgba(255,255,255,0.18)"/>'
+        . '<path d="M36 138c7-26 27-40 44-40s37 14 44 40" fill="rgba(255,255,255,0.18)"/>'
+        . '<text x="80" y="88" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">' . htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') . '</text>'
+        . '</svg>';
+
+    return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+}
+
+function buildFitspirationAvatarUrl(?string $image, string $seed = '', string $relativePrefix = '../images/'): string {
+    $resolvedImage = buildFitspirationImageUrl($image, $relativePrefix, '');
+    if ($resolvedImage !== '') {
+        return $resolvedImage;
+    }
+
+    return buildFitspirationDefaultAvatarDataUrl($seed);
+}
+
 function buildFitspirationImageUrl(?string $image, string $relativePrefix = '../images/', string $default = '../images/no_image.jpg'): string {
     $image = trim((string) $image);
     if ($image === '') {

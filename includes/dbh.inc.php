@@ -77,6 +77,10 @@ function respondToGuestAccessDenied(): void {
 }
 
 function enforceFitspirationAuthenticatedAccess(): void {
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
     if (isset($_SESSION['user_id']) || canGuestAccessFitspirationRequest()) {
         return;
     }

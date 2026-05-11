@@ -42,13 +42,13 @@
     color: #f0f1f3;
 }
 
-.search-container {
+.conversations-header .search-container {
     position: relative;
     width: min(100%, 280px);
     margin: 0 auto;
 }
 
-.search-container input {
+.conversations-header .search-container input {
     width: 100%;
     background: rgba(255,255,255,0.08);
     color: #e5e7eb;
@@ -58,17 +58,17 @@
     font-size: 14px;
 }
 
-.search-container input::placeholder {
+.conversations-header .search-container input::placeholder {
     color: #6b7280;
 }
 
-.search-container input:focus {
+.conversations-header .search-container input:focus {
     outline: none;
     border-color: #6366f1;
     box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3);
 }
 
-.search-results {
+.conversations-header .search-results {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
@@ -82,11 +82,11 @@
     border-radius: 10px;
 }
 
-.search-results.show {
+.conversations-header .search-results.show {
     display: block;
 }
 
-.search-result-item {
+.conversations-header .search-result-item {
     width: 100%;
     border: 0;
     background: transparent;
@@ -96,32 +96,32 @@
     cursor: pointer;
 }
 
-.search-result-item:last-child {
+.conversations-header .search-result-item:last-child {
     border-bottom: none;
 }
 
-.search-result-item:hover {
+.conversations-header .search-result-item:hover {
     background: rgba(99,102,241,0.18);
 }
 
-.search-result-item.disabled {
+.conversations-header .search-result-item.disabled {
     color: #9ca3af;
     cursor: default;
 }
 
-.search-result-item .username {
+.conversations-header .search-result-item .username {
     display: block;
     color: #e5e7eb;
     font-weight: 600;
 }
 
-.search-user-row {
+.conversations-header .search-user-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.search-avatar {
+.conversations-header .search-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -131,7 +131,7 @@
     flex-shrink: 0;
 }
 
-.search-result-item .email {
+.conversations-header .search-result-item .email {
     display: none;
     color: #94a3b8;
     font-size: 12px;
