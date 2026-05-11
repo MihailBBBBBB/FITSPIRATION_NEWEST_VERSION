@@ -383,23 +383,23 @@ include_once "../includes/AdminPanel.inc.php";
                                         <td><span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem;"><?php echo htmlspecialchars(ucfirst($report['status'])); ?></span></td>
                                         <td><?php echo htmlspecialchars($report['created_at']); ?></td>
                                         <td>
-                                            <div class="actions-inline">
+                                            <div class="actions-inline report-actions-inline">
                                                 <?php if ($report['target_type'] === 'pin'): ?>
                                                     <a class="admin-btn view-btn" href="AdminPanel.php?tab=content&pin_id=<?php echo (int)$report['target_id']; ?>">Open</a>
                                                 <?php endif; ?>
-                                                <form method="POST" style="display: inline-block;">
+                                                <form method="POST" class="report-action-form">
                                                     <?php echo csrfInput(); ?>
                                                     <input type="hidden" name="admin_tab" value="reports">
                                                     <input type="hidden" name="report_id" value="<?php echo (int)$report['id']; ?>">
-                                                    <input type="text" name="admin_note" placeholder="Action note..." maxlength="255" required style="width: 120px; padding: 0.25rem 0.5rem; background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 0.7rem;">
-                                                    <button type="submit" name="resolve_report" class="admin-btn unban-btn" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Resolve</button>
+                                                    <input type="text" name="admin_note" placeholder="Action note..." maxlength="255" required class="report-action-input">
+                                                    <button type="submit" name="resolve_report" class="admin-btn unban-btn report-action-btn">Resolve</button>
                                                 </form>
-                                                <form method="POST" style="display: inline-block;">
+                                                <form method="POST" class="report-action-form">
                                                     <?php echo csrfInput(); ?>
                                                     <input type="hidden" name="admin_tab" value="reports">
                                                     <input type="hidden" name="report_id" value="<?php echo (int)$report['id']; ?>">
-                                                    <input type="text" name="admin_note" placeholder="Dismiss reason..." maxlength="255" required style="width: 120px; padding: 0.25rem 0.5rem; background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 0.7rem;">
-                                                    <button type="submit" name="dismiss_report" class="admin-btn ban-btn" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Dismiss</button>
+                                                    <input type="text" name="admin_note" placeholder="Dismiss reason..." maxlength="255" required class="report-action-input">
+                                                    <button type="submit" name="dismiss_report" class="admin-btn ban-btn report-action-btn">Dismiss</button>
                                                 </form>
                                             </div>
                                         </td>

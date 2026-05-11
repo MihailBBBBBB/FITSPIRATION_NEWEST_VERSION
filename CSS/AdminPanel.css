@@ -259,6 +259,45 @@
     gap: 0.35rem;
 }
 
+.report-actions-inline {
+    align-items: stretch;
+}
+
+.report-action-form {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0.35rem;
+}
+
+.report-action-input {
+    width: 120px;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 0.65rem;
+    background: #111827;
+    color: #f9fafb;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    font-size: 0.75rem;
+}
+
+.report-action-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.34);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+}
+
+.report-action-btn,
+.report-actions-inline > .admin-btn {
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 0.8rem;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .admin-btn {
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 999px;
