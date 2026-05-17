@@ -45,6 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
         require_once "dbh.inc.php";
         require_once "auth_password.inc.php";
+        require_once "image_storage.inc.php";
         ensurePasswordStorageCapacity($pdo);
 
         // Check if email exists
@@ -71,10 +72,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             throw new RuntimeException('Unable to hash password.');
         }
 
-        // Insert user with username into database
-        $query = "INSERT INTO registration (email, password, birthdate, username, banned) VALUES (?, ?, ?, ?, ?);";
+        $defaultAvatar = getFitspirationSharedDefaultAvatarFileName();
+
+        // Insert user with username into database and a valid default avatar image.
+        $query = "INSERT INTO registration (email, password, birthdate, username, img, banned) VALUES (?, ?, ?, ?, ?, ?);";
         $stmt = $pdo->prepare($query);
-        $stmt->execute([$email, $passwordHash, $birthdate, $username, 0]);
+        $stmt->execute([$email, $passwordHash, $birthdate, $username, $defaultAvatar, 0]);
 
         $user_id = $pdo->lastInsertId();
         session_regenerate_id(true);

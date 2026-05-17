@@ -353,11 +353,11 @@ include_once '../JS/headerFooter.php';
                 <div class="delete-modal" id="deleteModal">
                     <div class="delete-modal-content">
                         <span class="delete-modal-close" onclick="closeDeleteModal()">×</span>
-                        <h2 id="deleteModalTitle">Delete Pin</h2>
-                        <p id="deleteModalText">Do you really want to delete this pin? This action cannot be undone.</p>
+                        <h2 id="deleteModalTitle" data-translate="Delete Pin">Delete Pin</h2>
+                        <p id="deleteModalText" data-translate="Do you really want to delete this pin? This action cannot be undone.">Do you really want to delete this pin? This action cannot be undone.</p>
                         <div class="delete-modal-buttons">
-                            <button class="delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
-                            <button class="delete-modal-confirm" onclick="confirmDelete()">Delete</button>
+                            <button class="delete-modal-cancel" data-translate="Cancel" onclick="closeDeleteModal()">Cancel</button>
+                            <button class="delete-modal-confirm" data-translate="Delete" onclick="confirmDelete()">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -420,11 +420,11 @@ include_once '../JS/headerFooter.php';
                                 <div class="delete-collection-modal" id="deleteCollectionModal">
                                     <div class="delete-collection-modal-content">
                                         <span class="delete-modal-close" onclick="closeDeleteCollectionModal()">×</span>
-                                        <h2 id="deleteCollectionModalTitle">Delete Collection</h2>
-                                        <p id="deleteCollectionModalText">Do you really want to delete this collection? This action cannot be undone.</p>
+                                        <h2 id="deleteCollectionModalTitle" data-translate="Delete Collection">Delete Collection</h2>
+                                        <p id="deleteCollectionModalText" data-translate="Do you really want to delete this collection? This action cannot be undone.">Do you really want to delete this collection? This action cannot be undone.</p>
                                         <div class="delete-modal-buttons">
-                                            <button class="delete-modal-cancel" onclick="closeDeleteCollectionModal()">Cancel</button>
-                                            <button class="delete-modal-confirm" onclick="confirmDeleteCollection()">Delete</button>
+                                            <button class="delete-modal-cancel" data-translate="Cancel" onclick="closeDeleteCollectionModal()">Cancel</button>
+                                            <button class="delete-modal-confirm" data-translate="Delete" onclick="confirmDeleteCollection()">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -630,6 +630,6 @@ include_once '../JS/headerFooter.php';
     <script></script>
     
     <script src="../JS/likes.js?v=1"></script>
-    <script src="../JS/Profile.js?v=10"></script>
+    <script src="../JS/Profile.js?v=11"></script>
 </body>
 </html>

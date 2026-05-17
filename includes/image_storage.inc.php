@@ -1,5 +1,13 @@
 <?php
 
+function getFitspirationSharedDefaultAvatarFileName(): string {
+    return 'default_avatar.svg';
+}
+
+function isFitspirationSharedDefaultAvatar(?string $image): bool {
+    return trim((string) $image) === getFitspirationSharedDefaultAvatarFileName();
+}
+
 function getFitspirationImagesDirectory(): string {
     return dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR;
 }

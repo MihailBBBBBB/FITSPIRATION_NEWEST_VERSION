@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
 
         try {
             // Delete old avatar if it exists and is not the shared placeholder.
-            if (!empty($users['img']) && $users['img'] !== 'no_image.jpg') {
+            if (!empty($users['img']) && $users['img'] !== 'no_image.jpg' && !isFitspirationSharedDefaultAvatar($users['img'])) {
                 $old_avatar_path = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . $users['img'];
                 if (file_exists($old_avatar_path)) {
                     unlink($old_avatar_path);

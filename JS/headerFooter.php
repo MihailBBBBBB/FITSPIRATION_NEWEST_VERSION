@@ -10,7 +10,7 @@ $unread_notifications = 0;
 $unread_messages = 0;
 $searchInputValue = isset($_GET['search']) ? (string) $_GET['search'] : '';
 $searchScopeValue = isset($_GET['search_scope']) ? (string) $_GET['search_scope'] : 'all';
-$allowedSearchScopes = ['all', 'pins', 'outfits', 'people', 'boards'];
+$allowedSearchScopes = ['all', 'pins', 'outfits', 'people'];
 if (!in_array($searchScopeValue, $allowedSearchScopes, true)) {
     $searchScopeValue = 'all';
 }
@@ -201,7 +201,7 @@ class SpecialAside extends HTMLElement {
         const searchInput = document.getElementById('searchInput');
         const suggestionsBox = document.getElementById('headerSearchSuggestions');
         const scopeInput = document.getElementById('headerSearchScope');
-        const allowedScopes = ['all', 'pins', 'outfits', 'people', 'boards'];
+        const allowedScopes = ['all', 'pins', 'outfits', 'people'];
         let activeScope = allowedScopes.includes(scopeInput?.value || '') ? scopeInput.value : 'all';
 
         if (!searchForm || !searchInput) {
@@ -271,11 +271,24 @@ class SpecialAside extends HTMLElement {
             return url;
         };
 
+        const applySuggestionsTranslation = () => {
+            if (!suggestionsBox || !window.translator || window.translator.currentLanguage === 'en') {
+                return;
+            }
+
+            const dictionary = window.translator.translations?.en;
+            if (!dictionary) {
+                return;
+            }
+
+            window.translator.translateElementTree(suggestionsBox, dictionary);
+        };
+
         const renderScopeChips = () => {
             return `
                 <div class="header-scope-chips" role="tablist" aria-label="Search scope">
                     ${allowedScopes.map(scope => `
-                        <button type="button" class="header-scope-chip ${activeScope === scope ? 'active' : ''}" data-action="scope" data-scope="${scope}">${scope.charAt(0).toUpperCase() + scope.slice(1)}</button>
+                        <button type="button" class="header-scope-chip ${activeScope === scope ? 'active' : ''}" data-action="scope" data-scope="${scope}" data-translate="${scope.charAt(0).toUpperCase() + scope.slice(1)}">${scope.charAt(0).toUpperCase() + scope.slice(1)}</button>
                     `).join('')}
                 </div>
             `;
@@ -294,12 +307,13 @@ class SpecialAside extends HTMLElement {
             suggestionsBox.innerHTML = `
                 ${renderScopeChips()}
                 <div class="header-suggestion-group">
-                    <p class="header-suggestion-label">Recent searches</p>
+                    <p class="header-suggestion-label" data-translate="Recent searches">Recent searches</p>
                     <div class="header-suggestion-items">
                         ${recent.map(item => `<button type="button" class="header-suggestion-item" data-action="recent" data-value="${String(item).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;')}">${String(item).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</button>`).join('')}
                     </div>
                 </div>
             `;
+            applySuggestionsTranslation();
             openSuggestions();
         };
 
@@ -336,7 +350,6 @@ class SpecialAside extends HTMLElement {
                     const users = Array.isArray(data.suggestions?.users) ? data.suggestions.users : [];
                     const pins = Array.isArray(data.suggestions?.pins) ? data.suggestions.pins : [];
                     const outfits = Array.isArray(data.suggestions?.outfits) ? data.suggestions.outfits : [];
-                    const boards = Array.isArray(data.suggestions?.collections) ? data.suggestions.collections : [];
                     const tags = Array.isArray(data.suggestions?.tags) ? data.suggestions.tags : [];
                     const items = [];
 
@@ -351,7 +364,7 @@ class SpecialAside extends HTMLElement {
                         if (!chunk.length) {
                             return;
                         }
-                        items.push(`<div class="header-suggestion-section-title">${safe(label)}</div>`);
+                        items.push(`<div class="header-suggestion-section-title" data-translate="${safe(label)}">${safe(label)}</div>`);
                         chunk.forEach(entry => {
                             if (action === 'user') {
                                 items.push(`<button type="button" class="header-suggestion-item" data-action="user" data-id="${Number(entry.id || 0)}">${safe(entry.username || 'User')}</button>`);
@@ -371,24 +384,22 @@ class SpecialAside extends HTMLElement {
                     if (activeScope === 'all' || activeScope === 'outfits') {
                         addLabeledItems('Outfits', outfits, 'search');
                     }
-                    if (activeScope === 'all' || activeScope === 'boards') {
-                        addLabeledItems('Boards', boards, 'search');
-                    }
                     if (activeScope === 'all' || activeScope === 'pins' || activeScope === 'outfits') {
                         addLabeledItems('Tags', tags, 'tag', 2);
                     }
 
                     if (items.length === 0) {
-                        items.push(`<button type="button" class="header-suggestion-item" data-action="search" data-value="${safe(term)}">Search for "${safe(term)}"</button>`);
+                        items.push(`<button type="button" class="header-suggestion-item" data-action="search" data-value="${safe(term)}"><span data-translate="Search for">Search for</span> "<span class="no-translate" data-user-content="true">${safe(term)}</span>"</button>`);
                     }
 
                     suggestionsBox.innerHTML = `
                         ${renderScopeChips()}
                         <div class="header-suggestion-group">
-                            <p class="header-suggestion-label">Suggestions</p>
+                            <p class="header-suggestion-label" data-translate="Suggestions">Suggestions</p>
                             <div class="header-suggestion-items">${items.join('')}</div>
                         </div>
                     `;
+                    applySuggestionsTranslation();
                     openSuggestions();
                 })
                 .catch(error => {

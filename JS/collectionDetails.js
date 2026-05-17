@@ -565,9 +565,17 @@ function applySort() {
 
 function openDeleteModal(type, id, event) {
     event.stopPropagation();
+    const titleKey = `Delete ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    const textKey = `Do you really want to delete this ${type}? This action cannot be undone.`;
     document.getElementById('deleteModal').style.display = 'flex';
-    document.getElementById('deleteModalTitle').textContent = `Delete ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-    document.getElementById('deleteModalText').textContent = `Do you really want to delete this ${type}? This action cannot be undone.`;
+    document.getElementById('deleteModalTitle').setAttribute('data-translate', titleKey);
+    document.getElementById('deleteModalTitle').textContent = window.translator && typeof window.translator.t === 'function'
+        ? window.translator.t(titleKey)
+        : titleKey;
+    document.getElementById('deleteModalText').setAttribute('data-translate', textKey);
+    document.getElementById('deleteModalText').textContent = window.translator && typeof window.translator.t === 'function'
+        ? window.translator.t(textKey)
+        : textKey;
     document.querySelector('.delete-modal-confirm').setAttribute('data-type', type);
     document.querySelector('.delete-modal-confirm').setAttribute('data-id', id);
 }

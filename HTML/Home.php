@@ -144,9 +144,16 @@ include_once '../JS/headerFooter.php';
                                 <?php if (!empty($savedSmartFeeds)): ?>
                                     <div class="smart-feed-list">
                                         <?php foreach ($savedSmartFeeds as $smartFeed): ?>
-                                            <a class="smart-feed-chip <?php echo ((int) ($smartFeed['id'] ?? 0) === (int) ($selectedSmartFeedId ?? 0)) ? 'active' : ''; ?>" href="Home.php?feed=<?php echo urlencode((string) $feedType); ?>&content=<?php echo urlencode((string) ($contentType ?? 'all')); ?>&search_scope=<?php echo urlencode((string) ($searchScope ?? 'all')); ?>&sort=<?php echo urlencode((string) $sort); ?><?php echo $searchTerm ? '&search=' . urlencode($searchTerm) : ''; ?>&smart_feed_id=<?php echo (int) ($smartFeed['id'] ?? 0); ?>">
-                                                <?php echo htmlspecialchars((string) ($smartFeed['feed_name'] ?? 'Smart Feed')); ?>
-                                            </a>
+                                            <div class="smart-feed-chip <?php echo ((int) ($smartFeed['id'] ?? 0) === (int) ($selectedSmartFeedId ?? 0)) ? 'active' : ''; ?>">
+                                                <a class="smart-feed-chip-link" href="Home.php?feed=<?php echo urlencode((string) $feedType); ?>&content=<?php echo urlencode((string) ($contentType ?? 'all')); ?>&search_scope=<?php echo urlencode((string) ($searchScope ?? 'all')); ?>&sort=<?php echo urlencode((string) $sort); ?><?php echo $searchTerm ? '&search=' . urlencode($searchTerm) : ''; ?>&smart_feed_id=<?php echo (int) ($smartFeed['id'] ?? 0); ?>">
+                                                    <?php echo htmlspecialchars((string) ($smartFeed['feed_name'] ?? 'Smart Feed')); ?>
+                                                </a>
+                                                <form method="POST" action="" class="smart-feed-delete-form">
+                                                    <?php echo csrfInput(); ?>
+                                                    <input type="hidden" name="delete_smart_feed_id" value="<?php echo (int) ($smartFeed['id'] ?? 0); ?>">
+                                                    <button type="submit" name="delete_smart_feed" class="smart-feed-delete-btn" aria-label="Delete smart filter" title="Delete smart filter">&times;</button>
+                                                </form>
+                                            </div>
                                         <?php endforeach; ?>
                                     </div>
                                 <?php endif; ?>

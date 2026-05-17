@@ -21,7 +21,7 @@ include_once "../JS/headerFooter.php";
     </head>
     <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
         <script src="../JS/likes.js?v=1"></script>
-        <script src="../JS/collectionDetails.js?v=14"></script>
+        <script src="../JS/collectionDetails.js?v=15"></script>
         <special-header></special-header>
         
         <div class="layout">
@@ -267,11 +267,11 @@ include_once "../JS/headerFooter.php";
                                 <div id="deleteModal" class="delete-modal">
                                     <div class="delete-modal-content">
                                         <span class="delete-modal-close" onclick="closeDeleteModal()">×</span>
-                                        <h2 id="deleteModalTitle">Delete Pin</h2>
-                                        <p id="deleteModalText">Do you really want to delete this pin? This action cannot be undone.</p>
+                                        <h2 id="deleteModalTitle" data-translate="Delete Pin">Delete Pin</h2>
+                                        <p id="deleteModalText" data-translate="Do you really want to delete this pin? This action cannot be undone.">Do you really want to delete this pin? This action cannot be undone.</p>
                                         <div class="delete-modal-buttons">
-                                            <button class="delete-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
-                                            <button class="delete-modal-confirm" onclick="confirmDelete()">Delete</button>
+                                            <button class="delete-modal-cancel" data-translate="Cancel" onclick="closeDeleteModal()">Cancel</button>
+                                            <button class="delete-modal-confirm" data-translate="Delete" onclick="confirmDelete()">Delete</button>
                                         </div>
                                     </div>
                                 </div>

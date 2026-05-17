@@ -510,6 +510,18 @@ function deleteComment(commentId, pinId) {
 let pinIdToDelete = null;
 let collectionIdToDelete = null;
 
+function setTranslatedText(elementId, translationKey) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        return;
+    }
+
+    element.setAttribute('data-translate', translationKey);
+    element.textContent = window.translator && typeof window.translator.t === 'function'
+        ? window.translator.t(translationKey)
+        : translationKey;
+}
+
 function openDeleteModal(type, id, event) {
     if (event) {
         event.stopPropagation();
@@ -527,8 +539,8 @@ function openDeleteModal(type, id, event) {
     }
 
     modal.style.display = 'flex';
-    document.getElementById('deleteModalTitle').textContent = 'Delete Pin';
-    document.getElementById('deleteModalText').textContent = 'Do you really want to delete this pin? This action cannot be undone.';
+    setTranslatedText('deleteModalTitle', 'Delete Pin');
+    setTranslatedText('deleteModalText', 'Do you really want to delete this pin? This action cannot be undone.');
 }
 
 function closeDeleteModal() {
@@ -601,8 +613,8 @@ function openDeleteCollectionModal(id, event) {
     }
 
     modal.style.display = 'flex';
-    document.getElementById('deleteCollectionModalTitle').textContent = 'Delete Collection';
-    document.getElementById('deleteCollectionModalText').textContent = 'Do you really want to delete this collection? This action cannot be undone.';
+    setTranslatedText('deleteCollectionModalTitle', 'Delete Collection');
+    setTranslatedText('deleteCollectionModalText', 'Do you really want to delete this collection? This action cannot be undone.');
 }
 
 function closeDeleteCollectionModal() {

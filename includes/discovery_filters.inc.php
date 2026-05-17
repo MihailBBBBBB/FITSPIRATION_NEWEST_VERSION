@@ -150,3 +150,18 @@ function getSmartFeedByIdForUser(PDO $pdo, int $userId, int $feedId): ?array {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     return $row ?: null;
 }
+
+function deleteSmartFeedForUser(PDO $pdo, int $userId, int $feedId): bool {
+    ensureDiscoveryFilterTables($pdo);
+
+    if ($userId <= 0 || $feedId <= 0) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare(
+        'DELETE FROM smart_feed_filters WHERE id = ? AND user_id = ? LIMIT 1'
+    );
+    $stmt->execute([$feedId, $userId]);
+
+    return $stmt->rowCount() > 0;
+}

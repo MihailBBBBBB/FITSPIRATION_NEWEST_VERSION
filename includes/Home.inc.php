@@ -36,7 +36,7 @@ ensureVisualSimilarityTable($pdo);
 
 $searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
 $searchScope = isset($_GET['search_scope']) ? trim((string) $_GET['search_scope']) : 'all';
-if (!in_array($searchScope, ['all', 'pins', 'outfits', 'people', 'boards'], true)) {
+if (!in_array($searchScope, ['all', 'pins', 'outfits', 'people'], true)) {
     $searchScope = 'all';
 }
 $visualSourcePinId = isset($_GET['visual_pin_id']) ? (int) $_GET['visual_pin_id'] : 0;
@@ -114,6 +114,44 @@ $hasActiveDiscoveryFilters = (
     || ($activeDiscoveryFilters['category'] ?? '') !== ''
 );
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_smart_feed'])) {
+    $deleteFeedId = (int) ($_POST['delete_smart_feed_id'] ?? 0);
+    $deleteOk = false;
+
+    if ($user_id && $deleteFeedId > 0) {
+        $deleteOk = deleteSmartFeedForUser($pdo, (int) $user_id, $deleteFeedId);
+    }
+
+    $redirectParams = [
+        'feed' => $feedType,
+        'content' => $contentType,
+        'search_scope' => $searchScope,
+        'sort' => $sort,
+    ];
+    if ($searchTerm !== '') {
+        $redirectParams['search'] = $searchTerm;
+    }
+    if (($activeDiscoveryFilters['dominant_color'] ?? '') !== '') {
+        $redirectParams['color'] = $activeDiscoveryFilters['dominant_color'];
+    }
+    if (($activeDiscoveryFilters['style_tag'] ?? '') !== '') {
+        $redirectParams['style'] = $activeDiscoveryFilters['style_tag'];
+    }
+    if (($activeDiscoveryFilters['season'] ?? '') !== '') {
+        $redirectParams['season'] = $activeDiscoveryFilters['season'];
+    }
+    if (($activeDiscoveryFilters['category'] ?? '') !== '') {
+        $redirectParams['category'] = $activeDiscoveryFilters['category'];
+    }
+    if ($selectedSmartFeedId > 0 && $selectedSmartFeedId !== $deleteFeedId) {
+        $redirectParams['smart_feed_id'] = $selectedSmartFeedId;
+    }
+    $redirectParams['smart_feed_status'] = $deleteOk ? 'deleted' : 'error';
+
+    header('Location: Home.php?' . http_build_query($redirectParams));
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_smart_feed'])) {
     $saveFilters = normalizeDiscoveryFilters([
         'dominant_color' => (string) ($_POST['dominant_color'] ?? ''),
@@ -158,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_smart_feed'])) {
 if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string) ($_GET['action'] ?? '') === 'search_suggestions') {
     $queryText = trim((string) ($_GET['q'] ?? ''));
     $suggestionScope = trim((string) ($_GET['search_scope'] ?? 'all'));
-    $allowedSuggestionScopes = ['all', 'pins', 'outfits', 'people', 'boards'];
+    $allowedSuggestionScopes = ['all', 'pins', 'outfits', 'people'];
     if (!in_array($suggestionScope, $allowedSuggestionScopes, true)) {
         $suggestionScope = 'all';
     }
@@ -505,9 +543,6 @@ try {
             break;
         case 'people':
             $searchScopeSql = "AND LOWER(COALESCE(pr.username, cr.username, '')) LIKE :search_like";
-            break;
-        case 'boards':
-            $searchScopeSql = "AND LOWER(COALESCE(c.title, '')) LIKE :search_like";
             break;
         default:
             $searchScopeSql = "AND (

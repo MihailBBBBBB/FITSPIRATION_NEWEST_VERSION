@@ -263,6 +263,7 @@
 .smart-feed-chip {
     display: inline-flex;
     align-items: center;
+    gap: 0.12rem;
     padding: 0.24rem 0.52rem;
     border-radius: 999px;
     border: 1px solid rgba(148, 163, 184, 0.26);
@@ -270,7 +271,41 @@
     color: #cbd5e1;
     font-size: 0.71rem;
     font-weight: 700;
+}
+
+.smart-feed-chip-link {
+    color: inherit;
     text-decoration: none;
+}
+
+.smart-feed-chip-link:hover {
+    text-decoration: none;
+}
+
+.smart-feed-delete-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.smart-feed-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.45);
+    color: #cbd5e1;
+    font-size: 0.82rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.smart-feed-delete-btn:hover {
+    background: rgba(127, 29, 29, 0.72);
+    color: #fecaca;
 }
 
 .smart-feed-chip.active {
