@@ -85,6 +85,7 @@ function populatePinModal(pinElement) {
     const creatorId = imageElement?.dataset.creatorId || pinElement.dataset.creatorId || '';
     const creatorName = imageElement?.dataset.creatorName || pinElement.dataset.creatorName || 'Unknown';
     const creatorImg = imageElement?.dataset.creatorImg || pinElement.dataset.creatorImg || '../images/no_image.jpg';
+    const outfitId = imageElement?.dataset.outfitId || pinElement.dataset.outfitId || '';
 
     const modalPinImage = document.getElementById('modalPinImage');
     const modalPinTitle = document.getElementById('modalPinTitle');
@@ -92,6 +93,8 @@ function populatePinModal(pinElement) {
     const modalLikeCount = document.getElementById('modalLikeCount');
     const modalCreatorLink = document.getElementById('modalCreatorLink');
     const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
+    const modalRemixBtn = document.getElementById('modalRemixBtn');
+    const modalFindSimilarBtn = document.getElementById('modalFindSimilarBtn');
 
     if (modalPinImage) {
         modalPinImage.src = imageSrc;
@@ -120,6 +123,20 @@ function populatePinModal(pinElement) {
 
     const pinIdInputs = document.querySelectorAll('#pinModal input[name="pin_id"]');
     pinIdInputs.forEach(input => input.value = pinId);
+
+    if (modalRemixBtn) {
+        if (outfitId) {
+            modalRemixBtn.href = 'OutfitBuilder.php?remix_outfit_id=' + encodeURIComponent(String(outfitId));
+            modalRemixBtn.classList.remove('hidden');
+        } else {
+            modalRemixBtn.classList.add('hidden');
+            modalRemixBtn.href = '#';
+        }
+    }
+
+    if (modalFindSimilarBtn) {
+        modalFindSimilarBtn.href = 'Home.php?visual_pin_id=' + encodeURIComponent(String(pinId)) + '&content=all&search_scope=all';
+    }
 
     const modal = document.getElementById('pinModal');
     if (modal) {
@@ -170,6 +187,8 @@ function applyFetchedPinData(pinData, comments) {
     const modalLikeCount = document.getElementById('modalLikeCount');
     const modalCreatorLink = document.getElementById('modalCreatorLink');
     const modalCreatorAvatar = document.getElementById('modalCreatorAvatar');
+    const modalRemixBtn = document.getElementById('modalRemixBtn');
+    const modalFindSimilarBtn = document.getElementById('modalFindSimilarBtn');
     const reportButton = document.querySelector('#pinModal .report-flag-btn');
     const reportPinIdInput = document.getElementById('reportPinId');
 
@@ -200,6 +219,20 @@ function applyFetchedPinData(pinData, comments) {
     }
 
     document.querySelectorAll('#pinModal input[name="pin_id"]').forEach(input => input.value = pinId);
+
+    if (modalRemixBtn) {
+        if (pinData.outfit_post_id) {
+            modalRemixBtn.href = 'OutfitBuilder.php?remix_outfit_id=' + encodeURIComponent(String(pinData.outfit_post_id));
+            modalRemixBtn.classList.remove('hidden');
+        } else {
+            modalRemixBtn.href = '#';
+            modalRemixBtn.classList.add('hidden');
+        }
+    }
+
+    if (modalFindSimilarBtn) {
+        modalFindSimilarBtn.href = 'Home.php?visual_pin_id=' + encodeURIComponent(pinId) + '&content=all&search_scope=all';
+    }
 
     if (reportButton) {
         reportButton.setAttribute('onclick', `openReportModal('pin', '${pinId}', '${pinId}')`);

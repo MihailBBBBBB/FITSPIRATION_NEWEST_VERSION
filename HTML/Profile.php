@@ -196,7 +196,7 @@ include_once '../JS/headerFooter.php';
                                 <p>No pins found. Create some pins to get started!</p>
                                 <?php else: ?>
                                     <?php foreach ($pins as $pin): ?>
-                                        <div class="pin-item" data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>">
+                                        <div class="pin-item" data-pin-id="<?php echo is_numeric($pin['id']) ? htmlspecialchars($pin['id']) : ''; ?>" data-outfit-id="<?php echo !empty($pin['outfit_post_id']) ? (int) $pin['outfit_post_id'] : ''; ?>">
                                             <img
                                             src="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['img'] ?? '')); ?>"
                                             alt="<?php echo htmlspecialchars($pin['title'] ?? 'Pin'); ?>"
@@ -271,6 +271,12 @@ include_once '../JS/headerFooter.php';
                                                                     <span class="like-count" id="modalLikeCount"><?php echo $modal_pin_data['like_count']; ?></span>
                                                                 </button>
                                                             </form>
+                                                            <a id="modalRemixBtn" class="outfit-action-btn<?php echo !empty($modal_pin_data['outfit_post_id']) ? '' : ' hidden'; ?>" href="<?php echo !empty($modal_pin_data['outfit_post_id']) ? 'OutfitBuilder.php?remix_outfit_id=' . (int) $modal_pin_data['outfit_post_id'] : '#'; ?>">
+                                                                <i class="fa-solid fa-shuffle"></i> Remix
+                                                            </a>
+                                                            <a id="modalFindSimilarBtn" class="outfit-action-btn" href="Home.php?visual_pin_id=<?php echo isset($_GET['pin_id']) ? (int) $_GET['pin_id'] : 0; ?>&content=all&search_scope=all">
+                                                                <i class="fa-solid fa-magnifying-glass"></i> Find Similar
+                                                            </a>
                                                             <button type="button" class="report-flag-btn" onclick="openReportModal('pin', '<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>', '<?php echo isset($_GET['pin_id']) ? htmlspecialchars($_GET['pin_id']) : ''; ?>')" title="Report pin">
                                                                 <i class="fa-solid fa-flag"></i>
                                                             </button>
@@ -624,6 +630,6 @@ include_once '../JS/headerFooter.php';
     <script></script>
     
     <script src="../JS/likes.js?v=1"></script>
-    <script src="../JS/Profile.js?v=9"></script>
+    <script src="../JS/Profile.js?v=10"></script>
 </body>
 </html>
