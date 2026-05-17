@@ -1757,13 +1757,13 @@ body {
 
 /* Unified modal comments design */
 .modal-comment-section {
-    margin-top: 0.8rem;
+    margin-top: auto;
     border-top: 1px solid rgba(148, 163, 184, 0.2);
     background: rgba(15, 23, 42, 0.4);
     border-radius: 12px;
     padding: 0.5rem;
     min-height: 0;
-    max-height: clamp(140px, 32vh, 210px);
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1782,7 +1782,6 @@ body {
     padding: 0;
     flex: 1;
     min-height: 0;
-    max-height: clamp(88px, 20vh, 130px);
     overflow-y: auto;
     padding-right: 2px;
     scrollbar-width: none;
@@ -1878,7 +1877,7 @@ body {
 
 @media (max-width: 980px) {
     .modal-comment-section {
-        max-height: clamp(170px, 34vh, 220px);
+        min-height: 170px;
     }
 
     .modal-comment-section .comment-input {
