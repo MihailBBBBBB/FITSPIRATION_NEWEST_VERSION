@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_smart_feed']))
     if ($selectedSmartFeedId > 0 && $selectedSmartFeedId !== $deleteFeedId) {
         $redirectParams['smart_feed_id'] = $selectedSmartFeedId;
     }
-    $redirectParams['smart_feed_status'] = $deleteOk ? 'deleted' : 'error';
+    $redirectParams['smart_feed_status'] = $deleteOk ? 'deleted' : 'delete_error';
 
     header('Location: Home.php?' . http_build_query($redirectParams));
     exit();

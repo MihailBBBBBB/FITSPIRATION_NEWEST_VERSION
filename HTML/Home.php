@@ -37,8 +37,18 @@ include_once '../JS/headerFooter.php';
                     </div>
                 <?php endif; ?>
                 <?php if (isset($_GET['smart_feed_status'])): ?>
-                    <div class="report-alert <?php echo $_GET['smart_feed_status'] === 'saved' ? 'is-ok' : 'is-error'; ?>">
-                        <?php echo $_GET['smart_feed_status'] === 'saved' ? 'Smart feed saved.' : 'Could not save smart feed. Select at least one filter.'; ?>
+                    <?php
+                    $smartFeedStatus = (string) $_GET['smart_feed_status'];
+                    $smartFeedAlertClass = in_array($smartFeedStatus, ['saved', 'deleted'], true) ? 'is-ok' : 'is-error';
+                    $smartFeedMessage = match ($smartFeedStatus) {
+                        'saved' => 'Smart feed saved.',
+                        'deleted' => 'Smart filter deleted.',
+                        'delete_error' => 'Could not delete smart filter. Please try again.',
+                        default => 'Could not save smart feed. Select at least one filter.',
+                    };
+                    ?>
+                    <div class="report-alert <?php echo $smartFeedAlertClass; ?>">
+                        <?php echo htmlspecialchars($smartFeedMessage); ?>
                     </div>
                 <?php endif; ?>
                 <div class="feed-hero">
