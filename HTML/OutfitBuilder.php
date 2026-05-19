@@ -379,6 +379,6 @@ $initialBuilderPayload = [
 
     <special-footer></special-footer>
     <script id="builderInitialState" type="application/json"><?php echo json_encode($initialBuilderPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES); ?></script>
-    <script src="../JS/OutfitBuilder.js?v=11"></script>
+    <script src="../JS/OutfitBuilder.js?v=12"></script>
 </body>
 </html>

@@ -23,13 +23,18 @@ if (!$collection_id) {
 }
 
 try {
-    $query = "SELECT user_id FROM collections WHERE collection_id = ? AND user_id = ?";
+    $query = "SELECT user_id FROM collections WHERE collection_id = ? LIMIT 1";
     $stmt = $pdo->prepare($query);
-    $stmt->execute([$collection_id, $user_id]);
+    $stmt->execute([$collection_id]);
     $collection = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$collection) {
-        echo json_encode(['success' => false, 'error' => 'Collection not found or not authorized']);
+        echo json_encode(['success' => false, 'error' => 'Collection not found.']);
+        exit();
+    }
+
+    if ((int) ($collection['user_id'] ?? 0) !== (int) $user_id) {
+        echo json_encode(['success' => false, 'error' => 'You can only delete your own collections.']);
         exit();
     }
 

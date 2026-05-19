@@ -1810,6 +1810,8 @@
             return;
         }
 
+        var addedCount = 0;
+
         for (var i = 0; i < files.length; i++) {
             var file = files[i];
             if (!file.type || file.type.indexOf('image/') !== 0) {
@@ -1827,10 +1829,18 @@
                 };
                 wardrobeItems.push(item);
                 renderWardrobeCard(item, wardrobeList, true);
-                createOutfitItem(item.src, item.name, { category: item.category, meta: item.meta });
+                addedCount += 1;
             } catch (error) {
                 setStatus(t('Could not read one of the selected files.'));
             }
+        }
+
+        if (addedCount > 0) {
+            setStatus(
+                addedCount === 1
+                    ? t('Uploaded 1 item to your wardrobe. Drag it onto the mannequin when you want to use it.')
+                    : t('Uploaded ') + String(addedCount) + t(' items to your wardrobe. Drag them onto the mannequin when you want to use them.')
+            );
         }
 
         wardrobeUpload.value = '';

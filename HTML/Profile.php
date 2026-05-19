@@ -630,6 +630,6 @@ include_once '../JS/headerFooter.php';
     <script></script>
     
     <script src="../JS/likes.js?v=1"></script>
-    <script src="../JS/Profile.js?v=12"></script>
+    <script src="../JS/Profile.js?v=13"></script>
 </body>
 </html>
