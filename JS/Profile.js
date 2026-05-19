@@ -9,7 +9,7 @@ function fitPinModalToImageSize() {
 
     if (!modal || !image) {
         return;
-            alert(error.message || 'Error deleting collection. Please try again.');
+    }
 
     const clearSizing = () => {
         if (modalLayout) {
