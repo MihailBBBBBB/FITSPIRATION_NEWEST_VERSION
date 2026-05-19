@@ -8,6 +8,7 @@ require_once "reports.inc.php";
 require_once "likes.inc.php";
 require_once "csrf.inc.php";
 require_once "collection_collaboration.inc.php";
+require_once __DIR__ . '/image_storage.inc.php';
 
 $is_ajax_request = (
     (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
@@ -54,10 +55,10 @@ error_log('Received sort: ' . $sort);
 $collaborationNotice = '';
 $collaborationNoticeType = '';
 $collection_owner_name = 'Owner';
-$collection_owner_image = '../images/no_image.jpg';
+$collection_owner_image = buildFitspirationDefaultAvatarDataUrl($collection_owner_name);
 
 $current_user_name = 'You';
-$current_user_image = '../images/no_image.jpg';
+$current_user_image = buildFitspirationDefaultAvatarDataUrl($current_user_name);
 try {
     $currentUserStmt = $pdo->prepare('SELECT username, img FROM registration WHERE id = ? LIMIT 1');
     $currentUserStmt->execute([$user_id]);
@@ -66,9 +67,7 @@ try {
         if (!empty($currentUser['username'])) {
             $current_user_name = $currentUser['username'];
         }
-        if (!empty($currentUser['img'])) {
-            $current_user_image = '../images/' . htmlspecialchars($currentUser['img']);
-        }
+        $current_user_image = buildFitspirationAvatarUrl($currentUser['img'] ?? '', $current_user_name);
     }
 } catch (PDOException $e) {
     error_log('Error fetching current user profile: ' . $e->getMessage());
@@ -103,9 +102,7 @@ try {
     $ownerInfo = $ownerInfoStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     if ($ownerInfo) {
         $collection_owner_name = (string) ($ownerInfo['username'] ?? 'Owner');
-        if (!empty($ownerInfo['img'])) {
-            $collection_owner_image = '../images/' . (string) $ownerInfo['img'];
-        }
+        $collection_owner_image = buildFitspirationAvatarUrl($ownerInfo['img'] ?? '', $collection_owner_name);
     }
 
     error_log("Collection fetched: collection_id={$collection_id}, title={$collection['title']}");
@@ -267,7 +264,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'comment' => (string)($commentRow['comment'] ?? ''),
                 'user_id' => $commentAuthorId,
                 'username' => (string)($commentRow['username'] ?? 'Unknown'),
-                'user_img' => !empty($commentRow['user_img']) ? '../images/' . (string)$commentRow['user_img'] : '../images/no_image.jpg',
+                'user_img' => buildFitspirationAvatarUrl($commentRow['user_img'] ?? '', (string) ($commentRow['username'] ?? 'Unknown')),
                 'can_delete' => ($commentAuthorId === $sessionId) || ($creatorId === $sessionId),
             ];
         }
@@ -280,7 +277,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'title' => (string)($pinData['title'] ?? 'Pin'),
                 'creator_id' => $creatorId,
                 'creator_name' => (string)($pinData['creator_name'] ?? 'Unknown'),
-                'creator_img' => !empty($pinData['creator_img']) ? '../images/' . (string)$pinData['creator_img'] : '../images/no_image.jpg',
+                'creator_img' => buildFitspirationAvatarUrl($pinData['creator_img'] ?? '', (string) ($pinData['creator_name'] ?? 'Unknown')),
                 'like_count' => (int)($pinData['like_count'] ?? 0),
                 'user_liked' => !empty($pinData['user_liked']),
             ],
@@ -545,7 +542,7 @@ $modal_pin_data = [
     'user_liked' => false,
     'creator_id' => '',
     'creator_name' => 'Unknown',
-    'creator_img' => '../images/no_image.jpg'
+    'creator_img' => buildFitspirationDefaultAvatarDataUrl('Unknown')
 ];
 $comments = [];
 if (isset($_GET['pin_id'])) {
@@ -575,7 +572,7 @@ if (isset($_GET['pin_id'])) {
             'user_liked' => $pin_data['user_liked'],
             'creator_id' => $pin_data['creator_id'] ?? '',
             'creator_name' => htmlspecialchars($pin_data['creator_name'] ?? 'Unknown'),
-            'creator_img' => !empty($pin_data['creator_img']) ? '../images/' . htmlspecialchars($pin_data['creator_img']) : '../images/no_image.jpg'
+            'creator_img' => buildFitspirationAvatarUrl($pin_data['creator_img'] ?? '', (string) ($pin_data['creator_name'] ?? 'Unknown'))
         ];
     }
 

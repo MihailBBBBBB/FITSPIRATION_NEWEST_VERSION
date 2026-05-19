@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once 'dbh.inc.php';
+require_once 'image_storage.inc.php';
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
@@ -26,7 +27,10 @@ try {
     $stmt = $pdo->prepare($query);
     $searchTerm = '%' . $search . '%';
     $stmt->execute([$searchTerm, $_SESSION['user_id']]);
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $users = array_map(static function (array $row): array {
+        $row['img'] = buildFitspirationAvatarUrl($row['img'] ?? '', (string) ($row['username'] ?? 'User'));
+        return $row;
+    }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     
     echo json_encode(['success' => true, 'users' => $users]);
 } catch (PDOException $e) {

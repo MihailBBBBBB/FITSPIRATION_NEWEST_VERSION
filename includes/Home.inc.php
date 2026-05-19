@@ -252,7 +252,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string) ($_GET[
                 $suggestions['users'][] = [
                     'id' => (int) ($userRow['id'] ?? 0),
                     'username' => (string) ($userRow['username'] ?? 'User'),
-                    'img' => !empty($userRow['img']) ? '../images/' . (string) $userRow['img'] : '../images/no_image.jpg',
+                    'img' => buildFitspirationAvatarUrl($userRow['img'] ?? '', (string) ($userRow['username'] ?? 'User')),
                 ];
             }
         } catch (PDOException $e) {
@@ -388,7 +388,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string) ($_GET[
 }
 
 $current_user_name = 'You';
-$current_user_image = '../images/no_image.jpg';
+$current_user_image = buildFitspirationDefaultAvatarDataUrl($current_user_name);
 if ($user_id) {
     try {
         $currentUserStmt = $pdo->prepare('SELECT username, img FROM registration WHERE id = ? LIMIT 1');
@@ -398,9 +398,7 @@ if ($user_id) {
             if (!empty($currentUser['username'])) {
                 $current_user_name = $currentUser['username'];
             }
-            if (!empty($currentUser['img'])) {
-                $current_user_image = '../images/' . htmlspecialchars($currentUser['img']);
-            }
+            $current_user_image = buildFitspirationAvatarUrl($currentUser['img'] ?? '', $current_user_name);
         }
     } catch (PDOException $e) {
         error_log('Error fetching current user profile: ' . $e->getMessage());
@@ -891,7 +889,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'comment' => (string)($commentRow['comment'] ?? ''),
                 'user_id' => $commentAuthorId,
                 'username' => (string)($commentRow['username'] ?? 'Unknown'),
-                'user_img' => !empty($commentRow['user_img']) ? '../images/' . (string)$commentRow['user_img'] : '../images/no_image.jpg',
+                'user_img' => buildFitspirationAvatarUrl($commentRow['user_img'] ?? '', (string) ($commentRow['username'] ?? 'Unknown')),
                 'can_delete' => ($commentAuthorId === $sessionId) || ($creatorId === $sessionId),
             ];
         }
@@ -904,7 +902,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'title' => (string)($pinData['title'] ?? 'Pin'),
                 'creator_id' => $creatorId,
                 'creator_name' => (string)($pinData['creator_name'] ?? 'Unknown'),
-                'creator_img' => !empty($pinData['creator_img']) ? '../images/' . (string)$pinData['creator_img'] : '../images/no_image.jpg',
+                'creator_img' => buildFitspirationAvatarUrl($pinData['creator_img'] ?? '', (string) ($pinData['creator_name'] ?? 'Unknown')),
                 'like_count' => (int)($pinData['like_count'] ?? 0),
                 'user_liked' => !empty($pinData['user_liked']),
                 'outfit_post_id' => !empty($pinData['outfit_post_id']) ? (int)$pinData['outfit_post_id'] : null,
@@ -1220,7 +1218,7 @@ if (isset($_GET['pin_id'])) {
             'user_liked' => $pin_data['user_liked'],
             'creator_name' => htmlspecialchars($pin_data['creator_name'] ?? 'Unknown'),
             'creator_id' => $pin_data['creator_id'] ? htmlspecialchars($pin_data['creator_id']) : '',
-            'creator_img' => $pin_data['creator_img'] ? '../images/' . htmlspecialchars($pin_data['creator_img']) : '../images/no_image.jpg',
+            'creator_img' => buildFitspirationAvatarUrl($pin_data['creator_img'] ?? '', (string) ($pin_data['creator_name'] ?? 'Unknown')),
             'outfit_post_id' => !empty($pin_data['outfit_post_id']) ? (int) $pin_data['outfit_post_id'] : null,
         ];
     }

@@ -173,9 +173,8 @@ function searchUsers(query) {
             searchResults.innerHTML = data.users.map(user => {
                 const safeUsername = escapeHtml(user.username || 'User');
                 const encodedUsername = encodeURIComponent(user.username || 'User');
-                const avatarName = (user.img || '').replace(/[^a-zA-Z0-9._-]/g, '');
                 const avatarSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><rect width="160" height="160" rx="80" fill="#e5e7eb"/><circle cx="80" cy="58" r="24" fill="#9ca3af"/><path d="M34 136c8-24 28-38 46-38s38 14 46 38" fill="#9ca3af"/></svg>`)}`;
-                const avatarSrc = avatarName ? `../images/${avatarName}` : avatarSvg;
+                const avatarSrc = String(user.img || avatarSvg);
                 return `
                     <button type="button" class="search-result-item" onclick="startChat(${user.id}, decodeURIComponent('${encodedUsername}'))">
                         <span class="search-user-row">
@@ -636,7 +635,7 @@ function buildConversationItem(message, partnerId) {
 
     const identity = getConversationIdentity(message, partnerId);
     const avatarName = String(identity.img || '').replace(/[^a-zA-Z0-9._-]/g, '');
-    const avatarSrc = avatarName ? `../images/${avatarName}` : '../images/no_image.jpg';
+    const avatarSrc = avatarName ? `../images/${avatarName}` : '../images/default_avatar.svg';
     const safeUsername = escapeHtml(identity.username || 'User');
 
     const element = document.createElement('div');
@@ -650,7 +649,7 @@ function buildConversationItem(message, partnerId) {
     element.innerHTML = `
         <div class="conversation-header">
             <span class="conversation-user">
-                <img class="conversation-avatar" src="${avatarSrc}" alt="${safeUsername} avatar" onerror="this.src='../images/no_image.jpg'">
+                <img class="conversation-avatar" src="${avatarSrc}" alt="${safeUsername} avatar" onerror="this.src='../images/default_avatar.svg'">
                 <span class="username">${safeUsername}</span>
             </span>
             <span class="conversation-status" data-presence-wrap>

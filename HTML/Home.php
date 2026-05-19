@@ -220,7 +220,7 @@ include_once '../JS/headerFooter.php';
                                     data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                     data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                     data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
+                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($pin['creator_img'] ?? '', (string) ($pin['creator_name'] ?? 'Unknown'))); ?>"
                                     data-outfit-id="<?php echo !empty($pin['outfit_post_id']) ? (int) $pin['outfit_post_id'] : ''; ?>"
                                     >
                                     <div class="pin-info">
@@ -269,7 +269,7 @@ include_once '../JS/headerFooter.php';
                                         </div>
                                         <div class="modal-details">
                                             <div class="modal-creator-row">
-                                                <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars(buildFitspirationImageUrl($modal_pin_data['creator_img'] ?? '')); ?>" alt="Creator">
+                                                <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($modal_pin_data['creator_img'] ?? '', (string) ($modal_pin_data['creator_name'] ?? 'Unknown'))); ?>" alt="Creator">
                                                 <div>
                                                     <?php
                                                     $modal_creator_href = '#';
@@ -306,7 +306,7 @@ include_once '../JS/headerFooter.php';
                                                     <?php if (!empty($comments)): ?>
                                                         <?php foreach ($comments as $comment): ?>
                                                             <li>
-                                                                <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($comment['user_img'] ?? '')); ?>" alt="User">
+                                                                <img src="<?php echo htmlspecialchars((string) ($comment['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="User">
                                                                 <?php echo isset($comment['username']) ? htmlspecialchars($comment['username']) : 'Unknown'; ?>: <?php echo isset($comment['comment']) ? htmlspecialchars($comment['comment']) : ''; ?>
                                                                 <?php
                                                                 $user_can_delete = false;
@@ -375,6 +375,6 @@ include_once '../JS/headerFooter.php';
     <special-footer></special-footer>
         
     <script src="../JS/likes.js?v=1"></script>
-    <script src="../JS/Home.js?v=9"></script>
+    <script src="../JS/Home.js?v=10"></script>
 </body>
 </html>

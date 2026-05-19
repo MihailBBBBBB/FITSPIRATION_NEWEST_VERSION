@@ -94,7 +94,10 @@ try {
     $query = "SELECT r.id, r.username, r.img FROM follows f JOIN registration r ON f.follower_id = r.id WHERE f.following_id = ?";
     $stmt = $pdo->prepare($query);
     $stmt->execute([$view_user_id]);
-    $follower_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $follower_users = array_map(static function (array $row): array {
+        $row['img'] = buildFitspirationAvatarUrl($row['img'] ?? '', (string) ($row['username'] ?? 'User'));
+        return $row;
+    }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 } catch (PDOException $e) {
     error_log('Error fetching followers users: ' . $e->getMessage());
     $follower_users = [];
@@ -104,7 +107,10 @@ try {
     $query = "SELECT r.id, r.username, r.img FROM follows f JOIN registration r ON f.following_id = r.id WHERE f.follower_id = ?";
     $stmt = $pdo->prepare($query);
     $stmt->execute([$view_user_id]);
-    $following_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $following_users = array_map(static function (array $row): array {
+        $row['img'] = buildFitspirationAvatarUrl($row['img'] ?? '', (string) ($row['username'] ?? 'User'));
+        return $row;
+    }, $stmt->fetchAll(PDO::FETCH_ASSOC));
 } catch (PDOException $e) {
     error_log('Error fetching following users: ' . $e->getMessage());
     $following_users = [];
@@ -158,7 +164,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'comment' => (string)($commentRow['comment'] ?? ''),
                 'user_id' => $commentAuthorId,
                 'username' => (string)($commentRow['username'] ?? 'Unknown'),
-                'user_img' => !empty($commentRow['user_img']) ? '../images/' . (string)$commentRow['user_img'] : '../images/no_image.jpg',
+                'user_img' => buildFitspirationAvatarUrl($commentRow['user_img'] ?? '', (string) ($commentRow['username'] ?? 'Unknown')),
                 'can_delete' => ($commentAuthorId === $sessionId) || ($creatorId === $sessionId),
             ];
         }
@@ -171,7 +177,7 @@ if ($is_ajax_request && $_SERVER['REQUEST_METHOD'] === 'GET' && (string)($_GET['
                 'title' => (string)($pinData['title'] ?? 'Pin'),
                 'creator_id' => $creatorId,
                 'creator_name' => (string)($pinData['creator_name'] ?? 'Unknown'),
-                'creator_img' => !empty($pinData['creator_img']) ? '../images/' . (string)$pinData['creator_img'] : '../images/no_image.jpg',
+                'creator_img' => buildFitspirationAvatarUrl($pinData['creator_img'] ?? '', (string) ($pinData['creator_name'] ?? 'Unknown')),
                 'like_count' => (int)($pinData['like_count'] ?? 0),
                 'user_liked' => !empty($pinData['user_liked']),
             ],
@@ -467,14 +473,14 @@ try {
                 'user_id' => (int) ($collabRow['user_id'] ?? 0),
                 'username' => (string) ($collabRow['username'] ?? 'Unknown'),
                 'role' => normalizeCollectionRole((string) ($collabRow['role'] ?? 'viewer')),
-                'user_img' => !empty($collabRow['user_img']) ? '../images/' . (string) $collabRow['user_img'] : '../images/no_image.jpg',
+                'user_img' => buildFitspirationAvatarUrl($collabRow['user_img'] ?? '', (string) ($collabRow['username'] ?? 'Unknown')),
             ];
         }
     }
 
     foreach ($collections as &$collectionRow) {
         $currentCollectionId = (int) ($collectionRow['collection_id'] ?? 0);
-        $ownerImage = !empty($collectionRow['owner_img']) ? '../images/' . (string) $collectionRow['owner_img'] : '../images/no_image.jpg';
+        $ownerImage = buildFitspirationAvatarUrl($collectionRow['owner_img'] ?? '', (string) ($collectionRow['owner_username'] ?? 'Unknown'));
 
         $collectionRow['owner'] = [
             'user_id' => (int) ($collectionRow['user_id'] ?? 0),
@@ -722,7 +728,7 @@ if (isset($_GET['pin_id'])) {
             'user_liked' => $pin_data['user_liked'],
             'creator_name' => htmlspecialchars($pin_data['creator_name'] ?? 'Unknown'),
             'creator_id' => $pin_data['creator_id'] ? htmlspecialchars($pin_data['creator_id']) : '',
-            'creator_img' => $pin_data['creator_img'] ? '../images/' . htmlspecialchars($pin_data['creator_img']) : '../images/no_image.jpg'
+            'creator_img' => buildFitspirationAvatarUrl($pin_data['creator_img'] ?? '', (string) ($pin_data['creator_name'] ?? 'Unknown'))
         ];
     }
 

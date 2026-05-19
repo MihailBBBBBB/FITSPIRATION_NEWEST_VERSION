@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/image_storage.inc.php';
+
 function ensureCollectionCollaborationTables(PDO $pdo): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS collection_collaborators (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -143,7 +145,7 @@ function getCollectionCollaborators(PDO $pdo, int $collectionId): array {
             'user_id' => (int) ($row['user_id'] ?? 0),
             'username' => (string) ($row['username'] ?? 'Unknown'),
             'role' => normalizeCollectionRole((string) ($row['role'] ?? 'viewer')),
-            'user_img' => !empty($row['user_img']) ? '../images/' . (string) $row['user_img'] : '../images/no_image.jpg',
+            'user_img' => buildFitspirationAvatarUrl($row['user_img'] ?? '', (string) ($row['username'] ?? 'Unknown')),
             'created_at' => (string) ($row['created_at'] ?? ''),
         ];
     }

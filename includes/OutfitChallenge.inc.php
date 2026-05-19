@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/dbh.inc.php';
 require_once __DIR__ . '/csrf.inc.php';
 require_once __DIR__ . '/outfits_schema.inc.php';
+require_once __DIR__ . '/image_storage.inc.php';
 
 if (!function_exists('isAjaxRequest')) {
     function isAjaxRequest(): bool {
@@ -175,7 +176,7 @@ try {
                 $usernameStmt->execute([$userId]);
                 $currentUserRow = $usernameStmt->fetch(PDO::FETCH_ASSOC) ?: [];
                 $currentUsername = (string) ($currentUserRow['username'] ?? 'You');
-                $currentUserImg = !empty($currentUserRow['img']) ? '../images/' . (string) $currentUserRow['img'] : '../images/no_image.jpg';
+                $currentUserImg = buildFitspirationAvatarUrl($currentUserRow['img'] ?? '', $currentUsername);
 
                 sendJsonResponse([
                     'ok' => true,
@@ -603,7 +604,7 @@ try {
                     'source' => (string) ($commentRow['comment_source'] ?? 'challenge'),
                     'user_id' => (int) ($commentRow['user_id'] ?? 0),
                     'username' => (string) ($commentRow['username'] ?? 'User'),
-                    'user_img' => !empty($commentRow['user_img']) ? '../images/' . (string) $commentRow['user_img'] : '../images/no_image.jpg',
+                    'user_img' => buildFitspirationAvatarUrl($commentRow['user_img'] ?? '', (string) ($commentRow['username'] ?? 'User')),
                     'comment' => (string) ($commentRow['comment'] ?? ''),
                     'can_delete' => ((int) ($commentRow['user_id'] ?? 0) === $userId),
                     'created_at' => (string) ($commentRow['created_at'] ?? ''),

@@ -248,7 +248,7 @@ include_once '../JS/headerFooter.php';
                                                     </div>
                                                     <div class="modal-details">
                                                         <div class="modal-creator-row">
-                                                            <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars($modal_pin_data['creator_img'] ?? '../images/no_image.jpg'); ?>" alt="Creator">
+                                                            <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($modal_pin_data['creator_img'] ?? '', (string) ($modal_pin_data['creator_name'] ?? 'Unknown'))); ?>" alt="Creator">
                                                             <div>
                                                                 <?php
                                                                 $modal_creator_href = '#';
@@ -286,7 +286,7 @@ include_once '../JS/headerFooter.php';
                                                                 <?php if (!empty($comments)): ?>
                                                                     <?php foreach ($comments as $comment): ?>
                                                                         <li>
-                                                                            <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($comment['user_img'] ?? '')); ?>" alt="User">
+                                                                            <img src="<?php echo htmlspecialchars((string) ($comment['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="User">
                                                                             <?php echo isset($comment['username']) ? htmlspecialchars($comment['username']) : 'Unknown'; ?>: <?php echo isset($comment['comment']) ? htmlspecialchars($comment['comment']) : ''; ?>
                                                                             <?php
                                                                             $user_can_delete = false;
@@ -392,7 +392,7 @@ include_once '../JS/headerFooter.php';
                                                     </div>
                                                     <div class="collection-owner-row">
                                                         <a class="collection-profile-link" href="Profile.php?user_id=<?php echo (int) ($collection['owner']['user_id'] ?? 0); ?>">
-                                                            <img src="<?php echo htmlspecialchars((string) ($collection['owner']['user_img'] ?? '../images/no_image.jpg')); ?>" alt="Owner">
+                                                            <img src="<?php echo htmlspecialchars((string) ($collection['owner']['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="Owner">
                                                             <span>Owner: <?php echo htmlspecialchars((string) ($collection['owner']['username'] ?? 'Unknown')); ?></span>
                                                         </a>
                                                     </div>
@@ -401,7 +401,7 @@ include_once '../JS/headerFooter.php';
                                                         <div class="collection-collaborator-list">
                                                             <?php foreach ($collection['collaborators'] as $collaborator): ?>
                                                                 <a class="collection-collaborator-chip collection-profile-link" href="Profile.php?user_id=<?php echo (int) ($collaborator['user_id'] ?? 0); ?>" title="<?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'Unknown')); ?>">
-                                                                    <img src="<?php echo htmlspecialchars((string) ($collaborator['user_img'] ?? '../images/no_image.jpg')); ?>" alt="<?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'User')); ?>">
+                                                                    <img src="<?php echo htmlspecialchars((string) ($collaborator['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="<?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'User')); ?>">
                                                                     <span class="collection-collaborator-name"><?php echo htmlspecialchars((string) ($collaborator['username'] ?? 'Unknown')); ?></span>
                                                                 </a>
                                                             <?php endforeach; ?>
@@ -502,7 +502,7 @@ include_once '../JS/headerFooter.php';
                                                     data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                                                     data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                                                     data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationImageUrl($pin['creator_img'] ?? '')); ?>"
+                                                    data-creator-img="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($pin['creator_img'] ?? '', (string) ($pin['creator_name'] ?? 'Unknown'))); ?>"
                                                     >
                                                     <div class="pin-info">
                                                         <h3 class="pin-title"><?php echo htmlspecialchars($pin['title'] ?? 'Untitled'); ?></h3>
@@ -554,7 +554,7 @@ include_once '../JS/headerFooter.php';
                 li.className = 'follow-list-item';
                 li.innerHTML = `
                     <div class="follow-user">
-                        <img src="${user.img ? '../images/' + escapeHtml(user.img) : '../images/no_image.jpg'}" alt="${escapeHtml(user.username)}" class="follow-avatar" />
+                        <img src="${escapeHtml(user.img || '../images/default_avatar.svg')}" alt="${escapeHtml(user.username)}" class="follow-avatar" />
                         <a href="Profile.php?user_id=${encodeURIComponent(user.id)}" class="follow-username">${escapeHtml(user.username)}</a>
                     </div>
                 `;
@@ -630,6 +630,6 @@ include_once '../JS/headerFooter.php';
     <script></script>
     
     <script src="../JS/likes.js?v=1"></script>
-    <script src="../JS/Profile.js?v=11"></script>
+    <script src="../JS/Profile.js?v=12"></script>
 </body>
 </html>

@@ -21,7 +21,7 @@ include_once "../JS/headerFooter.php";
     </head>
     <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
         <script src="../JS/likes.js?v=1"></script>
-        <script src="../JS/collectionDetails.js?v=15"></script>
+        <script src="../JS/collectionDetails.js?v=16"></script>
         <special-header></special-header>
         
         <div class="layout">
@@ -71,7 +71,7 @@ include_once "../JS/headerFooter.php";
                         <div class="collab-row collab-owner-row">
                             <div class="collab-user">
                                 <a class="collab-user-link" href="Profile.php?user_id=<?php echo (int) ($collection_owner_id ?? 0); ?>">
-                                    <img src="<?php echo htmlspecialchars((string) ($collection_owner_image ?? '../images/no_image.jpg')); ?>" alt="Owner">
+                                    <img src="<?php echo htmlspecialchars((string) ($collection_owner_image ?? '../images/default_avatar.svg')); ?>" alt="Owner">
                                     <span class="collab-name"><?php echo htmlspecialchars((string) ($collection_owner_name ?? 'Owner')); ?></span>
                                 </a>
                                 <span class="collab-role-pill owner">Owner</span>
@@ -85,7 +85,7 @@ include_once "../JS/headerFooter.php";
                                 <div class="collab-row">
                                     <div class="collab-user">
                                         <a class="collab-user-link" href="Profile.php?user_id=<?php echo (int) ($collab['user_id'] ?? 0); ?>">
-                                            <img src="<?php echo htmlspecialchars((string) ($collab['user_img'] ?? '../images/no_image.jpg')); ?>" alt="Collaborator">
+                                            <img src="<?php echo htmlspecialchars((string) ($collab['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="Collaborator">
                                             <span class="collab-name"><?php echo htmlspecialchars((string) ($collab['username'] ?? 'User')); ?></span>
                                         </a>
                                         <span class="collab-role-pill <?php echo htmlspecialchars((string) ($collab['role'] ?? 'viewer')); ?>"><?php echo htmlspecialchars(ucfirst((string) ($collab['role'] ?? 'viewer'))); ?></span>
@@ -149,7 +149,7 @@ include_once "../JS/headerFooter.php";
                             data-user-liked="<?php echo $pin['user_liked'] ? '1' : '0'; ?>"
                             data-creator-id="<?php echo htmlspecialchars($pin['creator_id'] ?? ''); ?>"
                             data-creator-name="<?php echo htmlspecialchars($pin['creator_name'] ?? 'Unknown'); ?>"
-                            data-creator-img="<?php echo !empty($pin['creator_img']) ? '../images/' . htmlspecialchars($pin['creator_img']) : '../images/no_image.jpg'; ?>"
+                            data-creator-img="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($pin['creator_img'] ?? '', (string) ($pin['creator_name'] ?? 'Unknown'))); ?>"
                             >
                             <?php if (!empty($pin['id']) && !empty($can_edit_collection)): ?>
                                 <span class="delete-cross" 
@@ -188,7 +188,7 @@ include_once "../JS/headerFooter.php";
                                     </div>
                                     <div class="modal-details">
                                         <div class="modal-creator-row">
-                                            <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars($modal_pin_data['creator_img'] ?? '../images/no_image.jpg'); ?>" alt="Creator">
+                                            <img id="modalCreatorAvatar" class="creator-avatar" src="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($modal_pin_data['creator_img'] ?? '', (string) ($modal_pin_data['creator_name'] ?? 'Unknown'))); ?>" alt="Creator">
                                             <div>
                                                 <a id="modalCreatorLink" class="creator-link" href="<?php echo !empty($modal_pin_data['creator_id']) ? 'Profile.php?user_id=' . urlencode($modal_pin_data['creator_id']) : '#'; ?>" style="<?php echo !empty($modal_pin_data['creator_id']) ? '' : 'pointer-events:none; color:#6b7280;'; ?>"><?php echo htmlspecialchars($modal_pin_data['creator_name'] ?? 'Unknown'); ?></a>
                                                 <p class="creator-subtitle">Created this pin</p>
@@ -211,7 +211,7 @@ include_once "../JS/headerFooter.php";
                                             <ul id="modalCommentList" class="comment-list">
                                                 <?php foreach ($comments as $comment): ?>
                                                     <li>
-                                                        <img src="<?php echo $comment['user_img'] ? '../images/' . htmlspecialchars($comment['user_img']) : '../images/no_image.jpg'; ?>" alt="User">
+                                                        <img src="<?php echo htmlspecialchars((string) ($comment['user_img'] ?? '../images/default_avatar.svg')); ?>" alt="User">
                                                         <?php echo htmlspecialchars($comment['username']); ?>: <?php echo htmlspecialchars($comment['comment']); ?>
                                                         <?php if ($comment['user_id'] == $user_id || $_SESSION['user_id'] == $user_id): ?>
                                                             <button type="button" class="comment-delete-btn"

@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 require_once 'dbh.inc.php';
 require_once 'discovery_filters.inc.php';
 require_once 'visual_similarity.inc.php';
+require_once 'image_storage.inc.php';
 
 function unifiedSearchRespond(array $payload): void {
     echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -251,7 +252,7 @@ function unifiedSearchFormatResults(array $rows): array {
         return [
             'id' => (int) ($row['id'] ?? 0),
             'username' => (string) ($row['username'] ?? 'User'),
-            'img' => !empty($row['img']) ? '../images/' . (string) $row['img'] : '../images/no_image.jpg',
+            'img' => buildFitspirationAvatarUrl($row['img'] ?? '', (string) ($row['username'] ?? 'User')),
             'score' => (float) ($row['score'] ?? 0),
         ];
     }, $rows['users'] ?? []);

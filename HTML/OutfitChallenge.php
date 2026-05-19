@@ -99,7 +99,7 @@ include_once '../JS/headerFooter.php';
                                 data-preview-title="<?php echo htmlspecialchars((string) ($previousWeekWinner['entry']['outfit_name'] ?? 'Winning Outfit'), ENT_QUOTES); ?>"
                                 data-preview-author="<?php echo htmlspecialchars((string) ($previousWeekWinner['entry']['username'] ?? 'Unknown'), ENT_QUOTES); ?>"
                                 data-preview-author-id="<?php echo (int) ($previousWeekWinner['entry']['user_id'] ?? 0); ?>"
-                                data-preview-author-avatar="<?php echo !empty($previousWeekWinner['entry']['user_img']) ? '../images/' . rawurlencode((string) $previousWeekWinner['entry']['user_img']) : '../images/no_image.jpg'; ?>"
+                                data-preview-author-avatar="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($previousWeekWinner['entry']['user_img'] ?? '', (string) ($previousWeekWinner['entry']['username'] ?? 'Unknown'))); ?>"
                                 data-preview-caption="<?php echo htmlspecialchars((string) ($previousWeekWinner['entry']['caption'] ?? ''), ENT_QUOTES); ?>"
                                 data-preview-votes="<?php echo (int) ($previousWeekWinner['entry']['vote_count'] ?? 0); ?>"
                                     data-preview-likes="0"
@@ -164,7 +164,7 @@ include_once '../JS/headerFooter.php';
                                         data-preview-title="<?php echo htmlspecialchars((string) ($entry['outfit_name'] ?: ('Outfit #' . (int) $entry['outfit_id'])), ENT_QUOTES); ?>"
                                         data-preview-author="<?php echo htmlspecialchars((string) $entry['username'], ENT_QUOTES); ?>"
                                         data-preview-author-id="<?php echo (int) $entry['user_id']; ?>"
-                                        data-preview-author-avatar="<?php echo !empty($entry['user_img']) ? '../images/' . rawurlencode((string) $entry['user_img']) : '../images/no_image.jpg'; ?>"
+                                        data-preview-author-avatar="<?php echo htmlspecialchars(buildFitspirationAvatarUrl($entry['user_img'] ?? '', (string) ($entry['username'] ?? 'Unknown'))); ?>"
                                         data-preview-caption="<?php echo htmlspecialchars((string) ($entry['caption'] ?? ''), ENT_QUOTES); ?>"
                                         data-preview-votes="<?php echo (int) $entry['vote_count']; ?>"
                                         data-preview-likes="0"
@@ -244,7 +244,7 @@ include_once '../JS/headerFooter.php';
                 <div class="outfit-preview-copy">
                     <h3 id="outfitPreviewTitle">Outfit</h3>
                     <div class="outfit-preview-author-row">
-                        <img id="outfitPreviewAuthorAvatar" src="../images/no_image.jpg" alt="Creator avatar" class="outfit-preview-author-avatar">
+                        <img id="outfitPreviewAuthorAvatar" src="../images/default_avatar.svg" alt="Creator avatar" class="outfit-preview-author-avatar">
                         <p class="outfit-preview-author">by <a id="outfitPreviewAuthorLink" href="#">Creator</a></p>
                     </div>
                     <p id="outfitPreviewCaption" class="outfit-preview-caption"></p>
@@ -456,7 +456,7 @@ include_once '../JS/headerFooter.php';
 
                 var avatar = document.createElement('img');
                 avatar.className = 'outfit-preview-comment-avatar';
-                avatar.src = commentRow.user_img || '../images/no_image.jpg';
+                avatar.src = commentRow.user_img || '../images/default_avatar.svg';
                 avatar.alt = (commentRow.username || 'User') + ' avatar';
 
                 var body = document.createElement('div');
@@ -583,7 +583,7 @@ include_once '../JS/headerFooter.php';
                 var title = trigger.getAttribute('data-preview-title') || 'Outfit';
                 var author = trigger.getAttribute('data-preview-author') || 'Creator';
                 var authorId = trigger.getAttribute('data-preview-author-id') || '0';
-                var authorAvatar = trigger.getAttribute('data-preview-author-avatar') || '../images/no_image.jpg';
+                var authorAvatar = trigger.getAttribute('data-preview-author-avatar') || '../images/default_avatar.svg';
                 var caption = trigger.getAttribute('data-preview-caption') || '';
                 var votes = trigger.getAttribute('data-preview-votes') || '0';
                 var outfitId = trigger.getAttribute('data-preview-outfit-id') || '0';

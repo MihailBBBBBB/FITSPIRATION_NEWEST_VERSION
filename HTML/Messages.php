@@ -15,6 +15,7 @@ require_once "../JS/headerFooter.php";
 require_once "../includes/dbh.inc.php";
 require_once "../includes/messages_repository.inc.php";
 require_once "../includes/websocket_auth.inc.php";
+require_once "../includes/image_storage.inc.php";
 
 // Get selected conversation if viewing a chat
 $selected_user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : null;
@@ -104,7 +105,7 @@ foreach ($conversations as $convRow) {
                     </div>
                 <?php else: ?>
                     <?php foreach ($conversations as $conv): ?>
-                        <?php $conversationAvatar = !empty($conv['img']) ? '../images/' . htmlspecialchars($conv['img']) : '../images/no_image.jpg'; ?>
+                        <?php $conversationAvatar = buildFitspirationAvatarUrl($conv['img'] ?? '', (string) ($conv['username'] ?? 'User')); ?>
                         <?php $isOnline = !empty($conv['is_online']); ?>
                         <?php $lastSeen = (string) ($conv['last_seen'] ?? ''); ?>
                         <div class="conversation-item <?php echo ($selected_user_id == $conv['other_user_id']) ? 'active' : ''; ?>"
@@ -212,7 +213,7 @@ foreach ($conversations as $convRow) {
     <!-- Footer -->
     <special-footer></special-footer>
 
-    <script src="../JS/Messages.js?v=8"></script>
+    <script src="../JS/Messages.js?v=9"></script>
 </body>
 </html>
 

@@ -161,7 +161,7 @@ function renderModalComments(comments, pinId) {
     comments.forEach(comment => {
         const li = document.createElement('li');
         const commentId = String(comment.id || '0');
-        const userImg = escapeHtml(comment.user_img || '../images/no_image.jpg');
+        const userImg = escapeHtml(comment.user_img || '../images/default_avatar.svg');
         const username = escapeHtml(comment.username || 'Unknown');
         const commentText = escapeHtml(comment.comment || '');
         const deleteButton = comment.can_delete
@@ -202,7 +202,7 @@ function applyFetchedPinData(pinData, comments) {
         modalLikeButton.classList.toggle('liked', !!pinData.user_liked);
     }
     if (modalLikeCount) modalLikeCount.textContent = Number(pinData.like_count || 0);
-    if (modalCreatorAvatar) modalCreatorAvatar.src = pinData.creator_img || '../images/no_image.jpg';
+    if (modalCreatorAvatar) modalCreatorAvatar.src = pinData.creator_img || '../images/default_avatar.svg';
 
     if (modalCreatorLink) {
         if (pinData.creator_id) {
@@ -383,7 +383,7 @@ function appendCommentToModal(commentData) {
     const pinId = String(commentData.pin_id || '');
     const commentId = String(commentData.id || '0');
     li.innerHTML = `
-        <img src="${escapeHtml(commentData.user_img || '../images/no_image.jpg')}" alt="User">
+        <img src="${escapeHtml(commentData.user_img || '../images/default_avatar.svg')}" alt="User">
         ${escapeHtml(commentData.username || 'You')}: ${escapeHtml(commentData.comment || '')}
         <button type="button" class="comment-delete-btn"
             data-comment-id="${escapeHtml(commentId)}"

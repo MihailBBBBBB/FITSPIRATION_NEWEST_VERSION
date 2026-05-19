@@ -2,6 +2,7 @@
 session_start();
 include_once '../includes/NotificationsPage.inc.php';
 include_once '../JS/headerFooter.php';
+require_once '../includes/image_storage.inc.php';
 
 function formatRelativeTime($ts) {
     $diff = time() - (int)$ts;
@@ -50,9 +51,7 @@ function formatRelativeTime($ts) {
                     <?php foreach ($notifications as $notification): ?>
                         <?php
                             $actorName = htmlspecialchars($notification['actor_username'] ?? 'Someone');
-                            $actorImg = !empty($notification['actor_img'])
-                                ? '../images/' . htmlspecialchars($notification['actor_img'])
-                                : '../images/no_image.jpg';
+                            $actorImg = buildFitspirationAvatarUrl($notification['actor_img'] ?? '', (string) ($notification['actor_username'] ?? 'Someone'));
                             $type = $notification['type'] ?? '';
                             $message = 'did something.';
                             $actorId = (int)($notification['actor_user_id'] ?? 0);
