@@ -37,15 +37,15 @@ include_once '../JS/headerFooter.php';
                 <div class="challenge-hero-actions">
                     <button type="button" class="participate-btn" id="openParticipateModalBtn">
                         <i class="fa-solid fa-medal"></i>
-                        <span data-translate="<?php echo htmlspecialchars($myEntry ? 'Update Participation' : 'Participate', ENT_QUOTES); ?>"><?php echo $myEntry ? 'Update Participation' : 'Participate'; ?></span>
+                        <span id="challengeParticipateBtnLabel" data-label-key="<?php echo htmlspecialchars($myEntry ? 'Update Participation' : 'Participate', ENT_QUOTES); ?>"><?php echo $myEntry ? 'Update Participation' : 'Participate'; ?></span>
                     </button>
                 </div>
             </section>
 
             <section class="challenge-badges-panel">
                 <div class="challenge-badges-head">
-                    <h2 data-translate="Your Challenge Badges">Your Challenge Badges</h2>
-                    <p data-translate="Progress updates automatically from your challenge activity.">Progress updates automatically from your challenge activity.</p>
+                    <h2 id="challengeBadgesTitle">Your Challenge Badges</h2>
+                    <p id="challengeBadgesSubtitle">Progress updates automatically from your challenge activity.</p>
                 </div>
                 <div class="challenge-badge-chip-grid">
                     <span class="challenge-badge-chip <?php echo !empty($challengeBadgeStats['badges']['weekly_participation']) ? 'earned' : ''; ?>">
@@ -318,7 +318,22 @@ include_once '../JS/headerFooter.php';
             var previewCommentsHideBtn = document.getElementById('outfitPreviewCommentsHideBtn');
 
             function applyOutfitChallengeUiTranslations() {
+                var participateLabel = document.getElementById('challengeParticipateBtnLabel');
+                var badgesTitle = document.getElementById('challengeBadgesTitle');
+                var badgesSubtitle = document.getElementById('challengeBadgesSubtitle');
                 var filterBar = document.getElementById('challengeFilterBar');
+
+                if (participateLabel) {
+                    participateLabel.textContent = t(participateLabel.getAttribute('data-label-key') || 'Participate');
+                }
+
+                if (badgesTitle) {
+                    badgesTitle.textContent = t('Your Challenge Badges');
+                }
+
+                if (badgesSubtitle) {
+                    badgesSubtitle.textContent = t('Progress updates automatically from your challenge activity.');
+                }
 
                 if (filterBar) {
                     filterBar.setAttribute('aria-label', t('Challenge filters'));
