@@ -17,7 +17,7 @@ include_once '../includes/CreateCollection.inc.php';
     <link rel="stylesheet" href="../CSS/Main.css?v=14"/>
     <link rel="stylesheet" href="../CSS/CreateCollection.css?v=9"/>
     <script src="../JS/csrf.js"></script>
-    <script src="../JS/translator.js"></script>
+    <script src="../JS/translator.js?v=3"></script>
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>

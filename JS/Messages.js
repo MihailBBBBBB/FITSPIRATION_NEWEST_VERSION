@@ -157,6 +157,14 @@ function formatPresenceLabel(isOnline, lastSeen) {
 function applyMessagesUiTranslations() {
     const conversationSearch = document.getElementById('conversationSearch');
     const messageInput = getMessageInput();
+    const clearButton = document.getElementById('clearConversationSearch');
+    const deleteButton = document.getElementById('deleteConversationBtn');
+    const deleteModalTitle = document.getElementById('deleteConversationModalTitle');
+    const deleteModalText = document.getElementById('deleteConversationModalText');
+    const deleteSelfButton = document.getElementById('deleteConversationSelfBtn');
+    const deleteEveryoneButton = document.getElementById('deleteConversationEveryoneBtn');
+    const deleteCancelButton = document.getElementById('deleteConversationCancelBtn');
+    const sendButton = document.querySelector('#messageForm .btn-send');
 
     if (conversationSearch) {
         conversationSearch.placeholder = t('Search in this chat...');
@@ -164,6 +172,38 @@ function applyMessagesUiTranslations() {
 
     if (messageInput) {
         messageInput.placeholder = t('Type your message...');
+    }
+
+    if (clearButton) {
+        clearButton.textContent = t('Clear');
+    }
+
+    if (deleteButton) {
+        deleteButton.textContent = t('Delete chat');
+    }
+
+    if (deleteModalTitle) {
+        deleteModalTitle.textContent = t('Delete chat');
+    }
+
+    if (deleteModalText) {
+        deleteModalText.textContent = t('Choose how you want to delete this chat.');
+    }
+
+    if (deleteSelfButton) {
+        deleteSelfButton.textContent = t('Delete for me');
+    }
+
+    if (deleteEveryoneButton) {
+        deleteEveryoneButton.textContent = t('Delete for both');
+    }
+
+    if (deleteCancelButton) {
+        deleteCancelButton.textContent = t('Cancel');
+    }
+
+    if (sendButton) {
+        sendButton.textContent = t('Send');
     }
 
     document.querySelectorAll('.message-item[data-is-deleted="1"] .message-content p').forEach(element => {

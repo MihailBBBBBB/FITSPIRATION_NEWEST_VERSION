@@ -15,7 +15,7 @@ include_once '../JS/headerFooter.php';
     <link rel="stylesheet" href="../CSS/Main.css?v=14">
     <link rel="stylesheet" href="../CSS/OutfitChallenge.css?v=34">
     <script src="../JS/csrf.js"></script>
-    <script src="../JS/translator.js"></script>
+    <script src="../JS/translator.js?v=3"></script>
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>
@@ -37,15 +37,15 @@ include_once '../JS/headerFooter.php';
                 <div class="challenge-hero-actions">
                     <button type="button" class="participate-btn" id="openParticipateModalBtn">
                         <i class="fa-solid fa-medal"></i>
-                        <?php echo $myEntry ? 'Update Participation' : 'Participate'; ?>
+                        <span data-translate="<?php echo htmlspecialchars($myEntry ? 'Update Participation' : 'Participate', ENT_QUOTES); ?>"><?php echo $myEntry ? 'Update Participation' : 'Participate'; ?></span>
                     </button>
                 </div>
             </section>
 
             <section class="challenge-badges-panel">
                 <div class="challenge-badges-head">
-                    <h2>Your Challenge Badges</h2>
-                    <p>Progress updates automatically from your challenge activity.</p>
+                    <h2 data-translate="Your Challenge Badges">Your Challenge Badges</h2>
+                    <p data-translate="Progress updates automatically from your challenge activity.">Progress updates automatically from your challenge activity.</p>
                 </div>
                 <div class="challenge-badge-chip-grid">
                     <span class="challenge-badge-chip <?php echo !empty($challengeBadgeStats['badges']['weekly_participation']) ? 'earned' : ''; ?>">
@@ -125,9 +125,9 @@ include_once '../JS/headerFooter.php';
             <section class="challenge-feed">
                 <div class="challenge-feed-head">
                     <h2>Leaderboard</h2>
-                    <p>Showing: <?php echo htmlspecialchars($challengeSortLabel); ?></p>
+                    <p><span data-translate="Showing:">Showing:</span> <?php echo htmlspecialchars($challengeSortLabel); ?></p>
                     <div class="challenge-filter-bar" role="group" aria-label="Challenge filters">
-                        <a href="OutfitChallenge.php?sort=most_voted" class="challenge-filter-pill <?php echo $challengeSort === 'most_voted' ? 'active' : ''; ?>">Most Voted</a>
+                        <a href="OutfitChallenge.php?sort=most_voted" class="challenge-filter-pill <?php echo $challengeSort === 'most_voted' ? 'active' : ''; ?>" data-translate="Most Voted">Most Voted</a>
                         <a href="OutfitChallenge.php?sort=newest" class="challenge-filter-pill <?php echo $challengeSort === 'newest' ? 'active' : ''; ?>">Newest</a>
                         <a href="OutfitChallenge.php?sort=followed" class="challenge-filter-pill <?php echo $challengeSort === 'followed' ? 'active' : ''; ?>">Followed</a>
                     </div>

@@ -164,8 +164,8 @@ foreach ($conversations as $convRow) {
 
                 <div class="messages-toolbar">
                     <input type="search" id="conversationSearch" placeholder="Search in this chat..." autocomplete="off">
-                    <button type="button" id="clearConversationSearch" data-translate="Clear">Clear</button>
-                    <button type="button" id="deleteConversationBtn" class="messages-toolbar-delete" data-translate="Delete chat">Delete chat</button>
+                    <button type="button" id="clearConversationSearch">Clear</button>
+                    <button type="button" id="deleteConversationBtn" class="messages-toolbar-delete">Delete chat</button>
                 </div>
 
                 <div class="messages-list" id="messagesList">
@@ -202,12 +202,12 @@ foreach ($conversations as $convRow) {
                 <div class="modal" id="deleteConversationModal" aria-hidden="true">
                     <div class="modal-content delete-conversation-modal-content">
                         <span class="modal-close" id="deleteConversationModalClose">&times;</span>
-                        <h2 data-translate="Delete chat">Delete chat</h2>
-                        <p class="delete-conversation-modal-text" data-translate="Choose how you want to delete this chat.">Choose how you want to delete this chat.</p>
+                        <h2 id="deleteConversationModalTitle">Delete chat</h2>
+                        <p class="delete-conversation-modal-text" id="deleteConversationModalText">Choose how you want to delete this chat.</p>
                         <div class="delete-conversation-modal-actions">
-                            <button type="button" id="deleteConversationSelfBtn" data-translate="Delete for me">Delete for me</button>
-                            <button type="button" id="deleteConversationEveryoneBtn" class="messages-toolbar-delete" data-translate="Delete for both">Delete for both</button>
-                            <button type="button" id="deleteConversationCancelBtn" data-translate="Cancel">Cancel</button>
+                            <button type="button" id="deleteConversationSelfBtn">Delete for me</button>
+                            <button type="button" id="deleteConversationEveryoneBtn" class="messages-toolbar-delete">Delete for both</button>
+                            <button type="button" id="deleteConversationCancelBtn">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -227,7 +227,7 @@ foreach ($conversations as $convRow) {
     <!-- Footer -->
     <special-footer></special-footer>
 
-    <script src="../JS/Messages.js?v=12"></script>
+    <script src="../JS/Messages.js?v=13"></script>
 </body>
 </html>
 

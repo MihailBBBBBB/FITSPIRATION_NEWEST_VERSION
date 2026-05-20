@@ -18,7 +18,7 @@ include_once '../includes/CreatePin.inc.php';
     <link rel="stylesheet" href="../CSS/Main.css?v=14"/>
     <link rel="stylesheet" href="../CSS/Create.css?v=10"/>
     <script src="../JS/csrf.js"></script>
-    <script src="../JS/translator.js"></script>
+    <script src="../JS/translator.js?v=3"></script>
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>
