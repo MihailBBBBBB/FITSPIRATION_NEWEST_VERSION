@@ -652,6 +652,36 @@
     font-size: 24px;
 }
 
+.delete-conversation-modal-content {
+    max-width: 420px;
+}
+
+.delete-conversation-modal-text {
+    margin: 0 0 20px;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.delete-conversation-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.delete-conversation-modal-actions button {
+    border: 1px solid rgba(99,102,241,0.45);
+    background: rgba(99,102,241,0.16);
+    color: #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.delete-conversation-modal-actions button:hover {
+    background: rgba(99,102,241,0.26);
+}
+
 .form-group {
     margin-bottom: 20px;
 }

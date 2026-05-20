@@ -905,17 +905,34 @@ function initializeConversationSearch() {
 }
 
 function deleteConversation() {
-    if (!messageState.selectedUserId) {
+    const modal = document.getElementById('deleteConversationModal');
+    if (!messageState.selectedUserId || !modal) {
         return;
     }
 
-    if (!confirm(t('Delete this chat from your messages list?'))) {
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeDeleteConversationModal() {
+    const modal = document.getElementById('deleteConversationModal');
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function submitDeleteConversation(scope) {
+    if (!messageState.selectedUserId) {
         return;
     }
 
     const formData = new FormData();
     formData.append('action', 'delete_conversation');
     formData.append('other_user_id', String(messageState.selectedUserId));
+    formData.append('scope', String(scope || 'self'));
     if (typeof appendCsrfToken === 'function') {
         appendCsrfToken(formData);
     }
@@ -931,6 +948,7 @@ function deleteConversation() {
                 return;
             }
 
+            closeDeleteConversationModal();
             window.location.href = 'Messages.php';
         })
         .catch(() => {
@@ -940,11 +958,39 @@ function deleteConversation() {
 
 function initializeDeleteConversation() {
     const deleteButton = document.getElementById('deleteConversationBtn');
-    if (!deleteButton) {
+    const modal = document.getElementById('deleteConversationModal');
+    const closeButton = document.getElementById('deleteConversationModalClose');
+    const cancelButton = document.getElementById('deleteConversationCancelBtn');
+    const selfButton = document.getElementById('deleteConversationSelfBtn');
+    const everyoneButton = document.getElementById('deleteConversationEveryoneBtn');
+
+    if (!deleteButton || !modal) {
         return;
     }
 
     deleteButton.addEventListener('click', deleteConversation);
+
+    if (closeButton) {
+        closeButton.addEventListener('click', closeDeleteConversationModal);
+    }
+
+    if (cancelButton) {
+        cancelButton.addEventListener('click', closeDeleteConversationModal);
+    }
+
+    if (selfButton) {
+        selfButton.addEventListener('click', () => submitDeleteConversation('self'));
+    }
+
+    if (everyoneButton) {
+        everyoneButton.addEventListener('click', () => submitDeleteConversation('everyone'));
+    }
+
+    modal.addEventListener('click', event => {
+        if (event.target === modal) {
+            closeDeleteConversationModal();
+        }
+    });
 }
 
 function initializeMobileComposerFocus() {

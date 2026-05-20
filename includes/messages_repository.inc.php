@@ -56,6 +56,35 @@ function clearConversationForUser(PDO $pdo, int $userId, int $otherUserId): arra
         'user_id' => $userId,
         'other_user_id' => $otherUserId,
         'cleared_at' => date('Y-m-d H:i:s'),
+        'scope' => 'self',
+    ];
+}
+
+function deleteConversationForEveryone(PDO $pdo, int $userId, int $otherUserId): array {
+    ensureMessageConversationClearsTable($pdo);
+
+    if ($userId <= 0 || $otherUserId <= 0 || $userId === $otherUserId) {
+        throw new RuntimeException('Invalid conversation selected.');
+    }
+
+    $existsStmt = $pdo->prepare('SELECT id FROM registration WHERE id = ? LIMIT 1');
+    $existsStmt->execute([$otherUserId]);
+    if (!$existsStmt->fetchColumn()) {
+        throw new RuntimeException('Conversation user not found.');
+    }
+
+    $clearStmt = $pdo->prepare(
+        'INSERT INTO message_conversation_clears (user_id, other_user_id, cleared_at)
+         VALUES (?, ?, NOW()), (?, ?, NOW())
+         ON DUPLICATE KEY UPDATE cleared_at = VALUES(cleared_at)'
+    );
+    $clearStmt->execute([$userId, $otherUserId, $otherUserId, $userId]);
+
+    return [
+        'user_id' => $userId,
+        'other_user_id' => $otherUserId,
+        'cleared_at' => date('Y-m-d H:i:s'),
+        'scope' => 'everyone',
     ];
 }
 
@@ -228,16 +257,16 @@ function getConversationMessages(PDO $pdo, int $currentUserId, int $otherUserId)
         FROM messages m
         INNER JOIN registration sender ON sender.id = m.sender_id
         INNER JOIN registration recipient ON recipient.id = m.recipient_id
-                WHERE (
-                                (m.sender_id = ? AND m.recipient_id = ?)
-                                OR (m.sender_id = ? AND m.recipient_id = ?)
-                            )
-                    AND (? IS NULL OR m.created_at > ?)
+        WHERE (
+                (m.sender_id = ? AND m.recipient_id = ?)
+                OR (m.sender_id = ? AND m.recipient_id = ?)
+              )
+          AND (? IS NULL OR m.created_at > ?)
         ORDER BY m.created_at ASC, m.message_id ASC
     ';
 
     $stmt = $pdo->prepare($query);
-        $stmt->execute([$currentUserId, $otherUserId, $otherUserId, $currentUserId, $cutoff, $cutoff]);
+    $stmt->execute([$currentUserId, $otherUserId, $otherUserId, $currentUserId, $cutoff, $cutoff]);
 
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return array_map('normalizeMessageRecord', $messages);

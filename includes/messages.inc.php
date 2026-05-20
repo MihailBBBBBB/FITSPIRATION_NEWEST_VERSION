@@ -111,7 +111,10 @@ try {
 
     if ($action === 'delete_conversation') {
         $otherUserId = (int) ($_POST['other_user_id'] ?? 0);
-        $result = clearConversationForUser($pdo, $senderId, $otherUserId);
+        $scope = trim((string) ($_POST['scope'] ?? 'self'));
+        $result = $scope === 'everyone'
+            ? deleteConversationForEveryone($pdo, $senderId, $otherUserId)
+            : clearConversationForUser($pdo, $senderId, $otherUserId);
 
         echo json_encode([
             'success' => true,
