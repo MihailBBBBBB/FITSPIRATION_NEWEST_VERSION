@@ -50,6 +50,18 @@ function buildFitspirationDefaultAvatarDataUrl(string $seed = ''): string {
 
     return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
 }
+function buildFitspirationDefaultImageDataUrl(string $label = 'No image'): string {
+    $safeLabel = htmlspecialchars($label, ENT_QUOTES);
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="' . $safeLabel . '">'
+        . '<rect width="1200" height="900" fill="#e5e7eb"/>'
+        . '<rect x="120" y="120" width="960" height="660" rx="40" fill="#d1d5db"/>'
+        . '<circle cx="420" cy="360" r="80" fill="#9ca3af"/>'
+        . '<path d="M220 700l220-220 120 120 180-220 240 320H220z" fill="#6b7280"/>'
+        . '<text x="600" y="820" text-anchor="middle" font-family="Arial, sans-serif" font-size="54" fill="#374151">' . $safeLabel . '</text>'
+        . '</svg>';
+
+    return 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($svg);
+}
 
 function buildFitspirationAvatarUrl(?string $image, string $seed = '', string $relativePrefix = '../images/'): string {
     $resolvedImage = buildFitspirationImageUrl($image, $relativePrefix, '');

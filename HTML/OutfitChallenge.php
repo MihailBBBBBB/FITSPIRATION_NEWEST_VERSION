@@ -15,12 +15,22 @@ include_once '../JS/headerFooter.php';
     <link rel="stylesheet" href="../CSS/Main.css?v=14">
     <link rel="stylesheet" href="../CSS/OutfitChallenge.css?v=34">
     <script src="../JS/csrf.js"></script>
-    <script src="../JS/translator.js?v=3"></script>
+    <script src="../JS/translator.js?v=4"></script>
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>
+    <?php
+    $defaultChallengeImageUrl = buildFitspirationDefaultImageDataUrl('Outfit preview');
+    $defaultChallengeAvatarUrl = buildFitspirationDefaultAvatarDataUrl('Creator');
+    ?>
 
     <div class="layout">
+                                <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($previousWeekWinner['entry']['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>" alt="Previous week winner">
+                                        data-preview-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($previousWeekWinner['entry']['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>">
+                                        <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($entry['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>" alt="Outfit entry">
+                                                data-preview-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($entry['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>">
+                            <img id="outfitPreviewImage" src="<?php echo htmlspecialchars($defaultChallengeImageUrl); ?>" alt="Outfit preview image">
+                                <img id="outfitPreviewAuthorAvatar" src="<?php echo htmlspecialchars($defaultChallengeAvatarUrl); ?>" alt="Creator avatar" class="outfit-preview-author-avatar">
         <special-aside></special-aside>
 
         <main class="main-content challenge-page">
@@ -37,15 +47,15 @@ include_once '../JS/headerFooter.php';
                 <div class="challenge-hero-actions">
                     <button type="button" class="participate-btn" id="openParticipateModalBtn">
                         <i class="fa-solid fa-medal"></i>
-                        <span id="challengeParticipateBtnLabel" data-label-key="<?php echo htmlspecialchars($myEntry ? 'Update Participation' : 'Participate', ENT_QUOTES); ?>"><?php echo $myEntry ? 'Update Participation' : 'Participate'; ?></span>
+                        <span data-translate="<?php echo htmlspecialchars($myEntry ? 'Update Participation' : 'Participate', ENT_QUOTES); ?>"><?php echo $myEntry ? 'Update Participation' : 'Participate'; ?></span>
                     </button>
                 </div>
             </section>
 
             <section class="challenge-badges-panel">
                 <div class="challenge-badges-head">
-                    <h2 id="challengeBadgesTitle">Your Challenge Badges</h2>
-                    <p id="challengeBadgesSubtitle">Progress updates automatically from your challenge activity.</p>
+                    <h2 data-translate="Your Challenge Badges">Your Challenge Badges</h2>
+                    <p data-translate="Progress updates automatically from your challenge activity.">Progress updates automatically from your challenge activity.</p>
                 </div>
                 <div class="challenge-badge-chip-grid">
                     <span class="challenge-badge-chip <?php echo !empty($challengeBadgeStats['badges']['weekly_participation']) ? 'earned' : ''; ?>">
@@ -125,9 +135,9 @@ include_once '../JS/headerFooter.php';
             <section class="challenge-feed">
                 <div class="challenge-feed-head">
                     <h2>Leaderboard</h2>
-                    <p><span id="challengeShowingLabel">Showing:</span> <?php echo htmlspecialchars($challengeSortLabel); ?></p>
+                    <p><span data-translate="Showing:">Showing:</span> <?php echo htmlspecialchars($challengeSortLabel); ?></p>
                     <div class="challenge-filter-bar" role="group" aria-label="Challenge filters" id="challengeFilterBar">
-                        <a href="OutfitChallenge.php?sort=most_voted" class="challenge-filter-pill <?php echo $challengeSort === 'most_voted' ? 'active' : ''; ?>" id="challengeMostVotedLink">Most Voted</a>
+                        <a href="OutfitChallenge.php?sort=most_voted" class="challenge-filter-pill <?php echo $challengeSort === 'most_voted' ? 'active' : ''; ?>" data-translate="Most Voted">Most Voted</a>
                         <a href="OutfitChallenge.php?sort=newest" class="challenge-filter-pill <?php echo $challengeSort === 'newest' ? 'active' : ''; ?>">Newest</a>
                         <a href="OutfitChallenge.php?sort=followed" class="challenge-filter-pill <?php echo $challengeSort === 'followed' ? 'active' : ''; ?>">Followed</a>
                     </div>
@@ -285,9 +295,15 @@ include_once '../JS/headerFooter.php';
     <special-footer></special-footer>
     <script>
         (function () {
+            var defaultChallengeImageUrl = <?php echo json_encode($defaultChallengeImageUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+            var defaultChallengeAvatarUrl = <?php echo json_encode($defaultChallengeAvatarUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+
             function t(str) {
                 return (window.translator && typeof window.translator.t === 'function')
                     ? window.translator.t(str)
+                                    var image = trigger.getAttribute('data-preview-image') || defaultChallengeImageUrl;
+                                    var authorAvatar = trigger.getAttribute('data-preview-author-avatar') || defaultChallengeAvatarUrl;
+                                    avatar.src = commentRow.user_img || defaultChallengeAvatarUrl;
                     : str;
             }
 
@@ -318,35 +334,10 @@ include_once '../JS/headerFooter.php';
             var previewCommentsHideBtn = document.getElementById('outfitPreviewCommentsHideBtn');
 
             function applyOutfitChallengeUiTranslations() {
-                var participateLabel = document.getElementById('challengeParticipateBtnLabel');
-                var badgesTitle = document.getElementById('challengeBadgesTitle');
-                var badgesSubtitle = document.getElementById('challengeBadgesSubtitle');
-                var showingLabel = document.getElementById('challengeShowingLabel');
                 var filterBar = document.getElementById('challengeFilterBar');
-                var mostVotedLink = document.getElementById('challengeMostVotedLink');
-
-                if (participateLabel) {
-                    participateLabel.textContent = t(participateLabel.getAttribute('data-label-key') || 'Participate');
-                }
-
-                if (badgesTitle) {
-                    badgesTitle.textContent = t('Your Challenge Badges');
-                }
-
-                if (badgesSubtitle) {
-                    badgesSubtitle.textContent = t('Progress updates automatically from your challenge activity.');
-                }
-
-                if (showingLabel) {
-                    showingLabel.textContent = t('Showing:');
-                }
 
                 if (filterBar) {
                     filterBar.setAttribute('aria-label', t('Challenge filters'));
-                }
-
-                if (mostVotedLink) {
-                    mostVotedLink.textContent = t('Most Voted');
                 }
             }
 
@@ -741,6 +732,11 @@ include_once '../JS/headerFooter.php';
             window.setInterval(updateChallengeCountdownLabels, 1000);
 
             window.addEventListener('fitspiration:language-changed', function () {
+                applyOutfitChallengeUiTranslations();
+                updateChallengeCountdownLabels();
+            });
+
+            window.addEventListener('fitspiration:translator-ready', function () {
                 applyOutfitChallengeUiTranslations();
                 updateChallengeCountdownLabels();
             });

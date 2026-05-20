@@ -520,7 +520,13 @@ class Translator {
 }
 
 // Initialize translator when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     window.translator = new Translator();
-    window.translator.restoreLanguage();
+    await window.translator.restoreLanguage();
+
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('fitspiration:translator-ready', {
+            detail: { language: window.translator.currentLanguage }
+        }));
+    }
 });
