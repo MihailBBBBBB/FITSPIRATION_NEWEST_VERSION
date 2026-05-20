@@ -68,7 +68,7 @@ foreach ($conversations as $convRow) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages - FITSPIRATION</title>
     <link rel="stylesheet" href="../CSS/Main.css?v=16">
-    <link rel="stylesheet" href="../CSS/Messages.css?v=20">
+    <link rel="stylesheet" href="../CSS/Messages.css?v=21">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <script src="../JS/csrf.js"></script>
     <script src="../JS/translator.js"></script>
@@ -165,6 +165,7 @@ foreach ($conversations as $convRow) {
                 <div class="messages-toolbar">
                     <input type="search" id="conversationSearch" placeholder="Search in this chat..." autocomplete="off">
                     <button type="button" id="clearConversationSearch">Clear</button>
+                    <button type="button" id="deleteConversationBtn" class="messages-toolbar-delete" data-translate="Delete chat">Delete chat</button>
                 </div>
 
                 <div class="messages-list" id="messagesList">
@@ -213,7 +214,7 @@ foreach ($conversations as $convRow) {
     <!-- Footer -->
     <special-footer></special-footer>
 
-    <script src="../JS/Messages.js?v=9"></script>
+    <script src="../JS/Messages.js?v=10"></script>
 </body>
 </html>
 

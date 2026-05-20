@@ -365,6 +365,16 @@
     background: rgba(99,102,241,0.26);
 }
 
+.messages-toolbar-delete {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(127, 29, 29, 0.22);
+    color: #fecaca;
+}
+
+.messages-toolbar-delete:hover {
+    background: rgba(185, 28, 28, 0.32);
+}
+
 .typing-indicator {
     min-height: 18px;
     margin: 0 0 8px;

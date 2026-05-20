@@ -1,5 +1,11 @@
 const messagesApp = document.getElementById('messagesApp');
 
+function t(str) {
+    return (window.translator && typeof window.translator.t === 'function')
+        ? window.translator.t(str)
+        : str;
+}
+
 const messageState = {
     app: messagesApp,
     currentUserId: Number(messagesApp?.dataset.currentUserId || 0),
@@ -898,6 +904,49 @@ function initializeConversationSearch() {
     });
 }
 
+function deleteConversation() {
+    if (!messageState.selectedUserId) {
+        return;
+    }
+
+    if (!confirm(t('Delete this chat from your messages list?'))) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('action', 'delete_conversation');
+    formData.append('other_user_id', String(messageState.selectedUserId));
+    if (typeof appendCsrfToken === 'function') {
+        appendCsrfToken(formData);
+    }
+
+    fetch('../includes/messages.inc.php', {
+        method: 'POST',
+        body: formData,
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert(data.message || t('Error deleting chat.'));
+                return;
+            }
+
+            window.location.href = 'Messages.php';
+        })
+        .catch(() => {
+            alert('Network error. Please try again.');
+        });
+}
+
+function initializeDeleteConversation() {
+    const deleteButton = document.getElementById('deleteConversationBtn');
+    if (!deleteButton) {
+        return;
+    }
+
+    deleteButton.addEventListener('click', deleteConversation);
+}
+
 function initializeMobileComposerFocus() {
     const messageInput = getMessageInput();
     if (!messageInput) {
@@ -954,6 +1003,7 @@ window.addEventListener('load', () => {
     connectWebSocket();
     initializeTypingPublisher();
     initializeConversationSearch();
+    initializeDeleteConversation();
     initializeMobileComposerFocus();
     refreshConversationPresenceLabels();
     updateActiveHeaderPresence(messageState.selectedUserOnline, messageState.selectedUserLastSeen);

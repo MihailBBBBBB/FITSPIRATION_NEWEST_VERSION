@@ -94,25 +94,25 @@ class SpecialFooter extends HTMLElement {
         <footer class="footer">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Contact Us</h4>
-                    <p>Email: info@fitspiration.com</p>
-                    <p>Phone: +371 21235324</p>
-                    <p>Address: Bultu iela 7, 5</p>
+                    <h4 data-translate="Contact Us">Contact Us</h4>
+                    <p><span data-translate="Email">Email</span>: <span class="no-translate">info@fitspiration.com</span></p>
+                    <p><span data-translate="Phone">Phone</span>: <span class="no-translate">+371 21235324</span></p>
+                    <p><span data-translate="Address">Address</span>: <span class="no-translate">Bultu iela 7, 5</span></p>
                 </div>
                 <div class="footer-section">
-                    <h4>Follow Us</h4>
-                    <a href="https://facebook.com" target="_blank">Facebook</a>
-                    <a href="https://instagram.com" target="_blank">Instagram</a>
-                    <a href="https://twitter.com" target="_blank">Twitter</a>
+                    <h4 data-translate="Follow Us">Follow Us</h4>
+                    <a href="https://facebook.com" target="_blank" class="no-translate">Facebook</a>
+                    <a href="https://instagram.com" target="_blank" class="no-translate">Instagram</a>
+                    <a href="https://twitter.com" target="_blank" class="no-translate">Twitter</a>
                 </div>
                 <div class="footer-section">
-                    <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
+                    <h4 data-translate="Legal">Legal</h4>
+                    <a href="#" data-translate="Privacy Policy">Privacy Policy</a>
+                    <a href="#" data-translate="Terms of Service">Terms of Service</a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Fitspiration. All rights reserved.</p>
+                <p><span class="no-translate">&copy; 2025 Fitspiration.</span> <span data-translate="All rights reserved.">All rights reserved.</span></p>
             </div>
         </footer>
         `

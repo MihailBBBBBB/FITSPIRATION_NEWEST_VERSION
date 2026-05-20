@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-require_once 'csrf.inc.php';
+require_once __DIR__ . '/csrf.inc.php';
 
 header('Content-Type: application/json');
 
@@ -18,9 +18,9 @@ if (!isset($_SESSION['user_id'])) {
 
 requireValidCsrfToken(true);
 
-require_once 'dbh.inc.php';
-require_once 'messages_repository.inc.php';
-require_once 'notifications.inc.php';
+require_once __DIR__ . '/dbh.inc.php';
+require_once __DIR__ . '/messages_repository.inc.php';
+require_once __DIR__ . '/notifications.inc.php';
 
 ensureNotificationsTable($pdo);
 
@@ -104,6 +104,18 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Message deleted',
+            'data' => $result,
+        ]);
+        exit();
+    }
+
+    if ($action === 'delete_conversation') {
+        $otherUserId = (int) ($_POST['other_user_id'] ?? 0);
+        $result = clearConversationForUser($pdo, $senderId, $otherUserId);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Chat deleted',
             'data' => $result,
         ]);
         exit();
