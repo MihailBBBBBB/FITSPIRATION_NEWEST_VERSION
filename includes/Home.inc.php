@@ -831,7 +831,14 @@ if ($feedType === 'following' && empty($pins1) && $user_id) {
              LIMIT 5"
         );
         $suggestStmt->execute([':user_id' => (int) $user_id]);
-        $suggestedUsers = $suggestStmt->fetchAll(PDO::FETCH_ASSOC);
+        $suggestedUsers = array_map(
+            static function (array $userRow): array {
+                $username = (string) ($userRow['username'] ?? 'User');
+                $userRow['img'] = buildFitspirationAvatarUrl($userRow['img'] ?? '', $username);
+                return $userRow;
+            },
+            $suggestStmt->fetchAll(PDO::FETCH_ASSOC)
+        );
     } catch (PDOException $e) {
         error_log('Error loading suggested users for following feed: ' . $e->getMessage());
     }

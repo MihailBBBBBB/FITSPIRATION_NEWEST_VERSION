@@ -158,6 +158,13 @@ function applyMessagesUiTranslations() {
     const conversationSearch = document.getElementById('conversationSearch');
     const messageInput = getMessageInput();
     const sendButton = document.querySelector('#messageForm .btn-send');
+    const clearButton = document.getElementById('clearConversationSearch');
+    const deleteButton = document.getElementById('deleteConversationBtn');
+    const deleteTitle = document.querySelector('#deleteConversationModal h2');
+    const deleteText = document.querySelector('#deleteConversationModal .delete-conversation-modal-text');
+    const deleteSelfButton = document.getElementById('deleteConversationSelfBtn');
+    const deleteEveryoneButton = document.getElementById('deleteConversationEveryoneBtn');
+    const deleteCancelButton = document.getElementById('deleteConversationCancelBtn');
 
     if (conversationSearch) {
         conversationSearch.placeholder = t('Search in this chat...');
@@ -169,6 +176,34 @@ function applyMessagesUiTranslations() {
 
     if (sendButton) {
         sendButton.textContent = t('Send');
+    }
+
+    if (clearButton) {
+        clearButton.textContent = t('Clear');
+    }
+
+    if (deleteButton) {
+        deleteButton.textContent = t('Delete chat');
+    }
+
+    if (deleteTitle) {
+        deleteTitle.textContent = t('Delete chat');
+    }
+
+    if (deleteText) {
+        deleteText.textContent = t('Choose how you want to delete this chat.');
+    }
+
+    if (deleteSelfButton) {
+        deleteSelfButton.textContent = t('Delete for me');
+    }
+
+    if (deleteEveryoneButton) {
+        deleteEveryoneButton.textContent = t('Delete for both');
+    }
+
+    if (deleteCancelButton) {
+        deleteCancelButton.textContent = t('Cancel');
     }
 
     document.querySelectorAll('.message-item[data-is-deleted="1"] .message-content p').forEach(element => {
@@ -1141,4 +1176,8 @@ window.addEventListener('load', () => {
             }
         });
     }
+});
+
+window.addEventListener('fitspiration:language-changed', () => {
+    applyMessagesUiTranslations();
 });

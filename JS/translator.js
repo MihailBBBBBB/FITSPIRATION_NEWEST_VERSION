@@ -133,6 +133,12 @@ class Translator {
         this.translateDocumentTitle(dictionary);
         this.saveLanguage(targetLanguage);
         this.updateTranslateButton();
+
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('fitspiration:language-changed', {
+                detail: { language: this.currentLanguage }
+            }));
+        }
     }
 
     observeDomChanges() {

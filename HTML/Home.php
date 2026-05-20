@@ -187,7 +187,7 @@ include_once '../JS/headerFooter.php';
                                             <?php foreach ($suggestedUsers as $suggestedUser): ?>
                                                 <li>
                                                     <a href="Profile.php?user_id=<?php echo (int) $suggestedUser['id']; ?>">
-                                                        <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($suggestedUser['img'] ?? '')); ?>" alt="<?php echo htmlspecialchars($suggestedUser['username']); ?>">
+                                                        <img src="<?php echo htmlspecialchars((string) ($suggestedUser['img'] ?? '')); ?>" alt="<?php echo htmlspecialchars($suggestedUser['username']); ?>">
                                                         <span class="no-translate" data-user-content="true"><?php echo htmlspecialchars($suggestedUser['username']); ?></span>
                                                     </a>
                                                 </li>
