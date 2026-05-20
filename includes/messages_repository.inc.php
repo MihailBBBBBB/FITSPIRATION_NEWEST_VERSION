@@ -88,6 +88,11 @@ function deleteConversationForEveryone(PDO $pdo, int $userId, int $otherUserId):
     ];
 }
 
+function getConversationSummaryVisibleCondition(string $alias = 'm'): string {
+    $safeAlias = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 'm';
+    return sprintf('NOT (%1$s.deleted_by_sender = TRUE AND %1$s.deleted_by_recipient = TRUE)', $safeAlias);
+}
+
 function getConversationSummaries(PDO $pdo, int $userId): array {
     ensureMessagePresenceTable($pdo);
     ensureMessageConversationClearsTable($pdo);
@@ -111,6 +116,7 @@ function getConversationSummaries(PDO $pdo, int $userId): array {
                     (m2.sender_id = :user_id_a AND m2.recipient_id = p.other_user_id)
                     OR (m2.sender_id = p.other_user_id AND m2.recipient_id = :user_id_b)
                 )
+                                    AND ' . getConversationSummaryVisibleCondition('m2') . '
                   AND (cc.cleared_at IS NULL OR m2.created_at > cc.cleared_at)
                 ORDER BY m2.created_at DESC, m2.message_id DESC
                 LIMIT 1
@@ -131,6 +137,7 @@ function getConversationSummaries(PDO $pdo, int $userId): array {
                 END AS other_user_id
             FROM messages m
             WHERE m.sender_id = :user_id_e OR m.recipient_id = :user_id_f
+                            AND ' . getConversationSummaryVisibleCondition('m') . '
         ) p
         INNER JOIN registration u ON u.id = p.other_user_id
         LEFT JOIN message_presence mp ON mp.user_id = u.id
@@ -143,6 +150,7 @@ function getConversationSummaries(PDO $pdo, int $userId): array {
                         (vm.sender_id = :user_id_h AND vm.recipient_id = p.other_user_id)
                         OR (vm.sender_id = p.other_user_id AND vm.recipient_id = :user_id_i)
                     )
+                    AND ' . getConversationSummaryVisibleCondition('vm') . '
                     AND (cc.cleared_at IS NULL OR vm.created_at > cc.cleared_at)
                )
         GROUP BY p.other_user_id, u.username, u.img, mp.is_online, mp.last_seen, cc.cleared_at

@@ -118,29 +118,29 @@ function formatConversationTime(dateString) {
 
 function formatLastSeen(dateString) {
     if (!dateString) {
-        return 'Offline';
+        return t('Offline');
     }
 
     const date = new Date(dateString.replace(' ', 'T'));
     if (Number.isNaN(date.getTime())) {
-        return 'Offline';
+        return t('Offline');
     }
 
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     if (seconds < 60) {
-        return 'Last seen just now';
+        return t('Last seen just now');
     }
     if (seconds < 3600) {
-        return `Last seen ${Math.floor(seconds / 60)}m ago`;
+        return `${t('Last seen')} ${Math.floor(seconds / 60)}m ago`;
     }
     if (seconds < 86400) {
-        return `Last seen ${Math.floor(seconds / 3600)}h ago`;
+        return `${t('Last seen')} ${Math.floor(seconds / 3600)}h ago`;
     }
     if (seconds < 604800) {
-        return `Last seen ${Math.floor(seconds / 86400)}d ago`;
+        return `${t('Last seen')} ${Math.floor(seconds / 86400)}d ago`;
     }
 
-    return `Last seen ${new Intl.DateTimeFormat(undefined, {
+    return `${t('Last seen')} ${new Intl.DateTimeFormat(undefined, {
         month: 'short',
         day: '2-digit',
     }).format(date)}`;
@@ -148,10 +148,41 @@ function formatLastSeen(dateString) {
 
 function formatPresenceLabel(isOnline, lastSeen) {
     if (isOnline) {
-        return 'Online';
+        return t('Online');
     }
 
     return formatLastSeen(lastSeen);
+}
+
+function applyMessagesUiTranslations() {
+    const conversationSearch = document.getElementById('conversationSearch');
+    const messageInput = getMessageInput();
+    const sendButton = document.querySelector('#messageForm .btn-send');
+
+    if (conversationSearch) {
+        conversationSearch.placeholder = t('Search in this chat...');
+    }
+
+    if (messageInput) {
+        messageInput.placeholder = t('Type your message...');
+    }
+
+    if (sendButton) {
+        sendButton.textContent = t('Send');
+    }
+
+    document.querySelectorAll('.message-item[data-is-deleted="1"] .message-content p').forEach(element => {
+        element.textContent = t('Message deleted');
+    });
+
+    document.querySelectorAll('.message-item.sent [data-message-status]').forEach(element => {
+        const parentMessage = element.closest('.message-item');
+        const isRead = parentMessage?.dataset.isRead === '1';
+        element.textContent = isRead ? t('Read') : t('Sent');
+    });
+
+    refreshConversationPresenceLabels();
+    updateActiveHeaderPresence(messageState.selectedUserOnline, messageState.selectedUserLastSeen);
 }
 
 function searchUsers(query) {
@@ -468,7 +499,7 @@ function handleSocketMessage(rawMessage) {
     }
 
     if (payload.type === 'message_deleted' && payload.message_id) {
-        markMessageDeleted(payload.message_id, payload.placeholder_text || 'Message deleted');
+        markMessageDeleted(payload.message_id, payload.placeholder_text || t('Message deleted'));
         return;
     }
 
@@ -496,7 +527,7 @@ function createMessageElement(message) {
     const isSentByCurrentUser = Number(message.sender_id) === messageState.currentUserId;
     const isRead = !!message.is_read;
     const isDeleted = !!message.is_deleted;
-    const messageText = isDeleted ? 'Message deleted' : String(message.message_text || '');
+    const messageText = isDeleted ? t('Message deleted') : String(message.message_text || '');
 
     const wrapper = document.createElement('div');
     wrapper.className = `message-item ${isSentByCurrentUser ? 'sent' : 'received'}${isDeleted ? ' deleted' : ''}`;
@@ -507,7 +538,7 @@ function createMessageElement(message) {
         <div class="message-content">
             <p>${escapeHtml(messageText)}</p>
             <span class="message-time">${escapeHtml(formatMessageTime(message.created_at))}</span>
-            ${isSentByCurrentUser && !isDeleted ? `<span class="message-status${isRead ? ' is-read' : ''}" data-message-status>${isRead ? 'Read' : 'Sent'}</span>` : ''}
+            ${isSentByCurrentUser && !isDeleted ? `<span class="message-status${isRead ? ' is-read' : ''}" data-message-status>${isRead ? t('Read') : t('Sent')}</span>` : ''}
         </div>
         ${!isDeleted ? `<span class="message-actions" onclick="deleteMessage(${Number(message.message_id)})">×</span>` : ''}
     `;
@@ -526,7 +557,7 @@ function setMessageReadState(messageId, isRead) {
         return;
     }
 
-    statusEl.textContent = isRead ? 'Read' : 'Sent';
+    statusEl.textContent = isRead ? t('Read') : t('Sent');
     statusEl.classList.toggle('is-read', !!isRead);
 }
 
@@ -599,7 +630,7 @@ function markMessageDeleted(messageId, placeholderText = 'Message deleted') {
 
     const textNode = messageElement.querySelector('.message-content p');
     if (textNode) {
-        textNode.textContent = placeholderText;
+        textNode.textContent = placeholderText === 'Message deleted' ? t('Message deleted') : placeholderText;
     }
 
     const statusEl = messageElement.querySelector('[data-message-status]');
@@ -610,6 +641,48 @@ function markMessageDeleted(messageId, placeholderText = 'Message deleted') {
     const actionEl = messageElement.querySelector('.message-actions');
     if (actionEl) {
         actionEl.remove();
+    }
+
+    refreshSelectedConversationPreview();
+}
+
+function refreshSelectedConversationPreview() {
+    if (!messageState.selectedUserId) {
+        return;
+    }
+
+    const conversationItem = document.querySelector(`.conversation-item[data-user-id="${String(messageState.selectedUserId)}"]`);
+    if (!conversationItem) {
+        return;
+    }
+
+    const visibleMessages = Array.from(document.querySelectorAll('.message-item[data-message-id]')).filter(item => item.dataset.isDeleted !== '1');
+    const lastVisibleMessage = visibleMessages[visibleMessages.length - 1] || null;
+    const preview = conversationItem.querySelector('[data-last-message]');
+    const time = conversationItem.querySelector('[data-last-message-time]');
+
+    if (!lastVisibleMessage) {
+        if (preview) {
+            preview.textContent = '';
+        }
+        if (time) {
+            time.textContent = '';
+            time.dataset.lastMessageTime = '';
+        }
+        return;
+    }
+
+    const textNode = lastVisibleMessage.querySelector('.message-content p');
+    const timeNode = lastVisibleMessage.querySelector('.message-time');
+    const rawText = String(textNode?.textContent || '');
+    const rawTime = String(lastVisibleMessage.querySelector('.message-time')?.textContent || '');
+
+    if (preview) {
+        preview.textContent = rawText.length > 50 ? `${rawText.slice(0, 50)}...` : rawText;
+    }
+
+    if (time) {
+        time.textContent = rawTime;
     }
 }
 
@@ -660,7 +733,7 @@ function buildConversationItem(message, partnerId) {
             </span>
             <span class="conversation-status" data-presence-wrap>
                 <span class="presence-dot offline" data-presence-dot></span>
-                <span class="presence-label" data-presence-label>Offline</span>
+                <span class="presence-label" data-presence-label>${t('Offline')}</span>
             </span>
             <span class="badge" data-unread-badge style="display:none;"></span>
         </div>
@@ -838,7 +911,7 @@ function deleteMessage(messageId) {
                 return;
             }
 
-            markMessageDeleted(messageId, 'Message deleted');
+            markMessageDeleted(messageId, t('Message deleted'));
         })
         .catch(() => {
             alert('Network error. Please try again.');
@@ -1051,6 +1124,7 @@ window.addEventListener('load', () => {
     initializeConversationSearch();
     initializeDeleteConversation();
     initializeMobileComposerFocus();
+    applyMessagesUiTranslations();
     refreshConversationPresenceLabels();
     updateActiveHeaderPresence(messageState.selectedUserOnline, messageState.selectedUserLastSeen);
 
