@@ -19,18 +19,8 @@ include_once '../JS/headerFooter.php';
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>
-    <?php
-    $defaultChallengeImageUrl = buildFitspirationDefaultImageDataUrl('Outfit preview');
-    $defaultChallengeAvatarUrl = buildFitspirationDefaultAvatarDataUrl('Creator');
-    ?>
 
     <div class="layout">
-                                <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($previousWeekWinner['entry']['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>" alt="Previous week winner">
-                                        data-preview-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($previousWeekWinner['entry']['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>">
-                                        <img src="<?php echo htmlspecialchars(buildFitspirationImageUrl($entry['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>" alt="Outfit entry">
-                                                data-preview-image="<?php echo htmlspecialchars(buildFitspirationImageUrl($entry['outfit_img'] ?? '', '../images/', $defaultChallengeImageUrl)); ?>">
-                            <img id="outfitPreviewImage" src="<?php echo htmlspecialchars($defaultChallengeImageUrl); ?>" alt="Outfit preview image">
-                                <img id="outfitPreviewAuthorAvatar" src="<?php echo htmlspecialchars($defaultChallengeAvatarUrl); ?>" alt="Creator avatar" class="outfit-preview-author-avatar">
         <special-aside></special-aside>
 
         <main class="main-content challenge-page">
@@ -295,15 +285,9 @@ include_once '../JS/headerFooter.php';
     <special-footer></special-footer>
     <script>
         (function () {
-            var defaultChallengeImageUrl = <?php echo json_encode($defaultChallengeImageUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
-            var defaultChallengeAvatarUrl = <?php echo json_encode($defaultChallengeAvatarUrl, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
-
             function t(str) {
                 return (window.translator && typeof window.translator.t === 'function')
                     ? window.translator.t(str)
-                                    var image = trigger.getAttribute('data-preview-image') || defaultChallengeImageUrl;
-                                    var authorAvatar = trigger.getAttribute('data-preview-author-avatar') || defaultChallengeAvatarUrl;
-                                    avatar.src = commentRow.user_img || defaultChallengeAvatarUrl;
                     : str;
             }
 
