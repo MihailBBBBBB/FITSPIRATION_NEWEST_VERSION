@@ -15,7 +15,7 @@ include_once '../JS/headerFooter.php';
     <link rel="stylesheet" href="../CSS/Main.css?v=14">
     <link rel="stylesheet" href="../CSS/OutfitChallenge.css?v=34">
     <script src="../JS/csrf.js"></script>
-    <script src="../JS/translator.js?v=4"></script>
+    <script src="../JS/translator.js?v=5"></script>
 </head>
 <body data-csrf-token="<?php echo htmlspecialchars(getCsrfToken(), ENT_QUOTES); ?>">
     <special-header></special-header>

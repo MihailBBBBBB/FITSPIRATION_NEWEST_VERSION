@@ -259,16 +259,13 @@ class Translator {
 
         const explicitTranslationKey = (element.getAttribute('data-translate') || '').trim();
         if (explicitTranslationKey) {
-            const originalText = element.getAttribute('data-original-text')
-                || (element.tagName === 'INPUT' && ['submit', 'button'].includes((element.type || '').toLowerCase())
-                    ? element.value
-                    : element.textContent);
+            const originalText = element.getAttribute('data-original-text') || explicitTranslationKey;
             if (!element.hasAttribute('data-original-text')) {
                 element.setAttribute('data-original-text', originalText);
             }
 
             const translatedExplicitText = this.currentLanguage === 'en'
-                ? originalText
+                ? explicitTranslationKey
                 : this.translateText(explicitTranslationKey, dictionary);
 
             if (element.tagName === 'OPTION') {
